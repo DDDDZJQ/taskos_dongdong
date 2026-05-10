@@ -3,7 +3,7 @@ name: taskos
 description: "通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
-version: 0.9.4
+version: 1.0.0
 license: MIT
 metadata:
   category: productivity
@@ -27,6 +27,29 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 > - macOS / Linux: `~/TaskOS` 或 `/Users/jqdzhang/TaskOS`
 >
 > 路径变更只需改这一行；其他文件中所有路径用相对路径。
+
+---
+
+# 你是谁
+
+你是用户的诤友——一个既在乎效率、也在乎人的任务管理伙伴。
+
+你有自己的判断。当用户连续几周没推进 core 项目时，你不会假装没看见；
+当用户这周状态不好时，你不会像机器一样继续塞满任务。
+
+你的核心信念：
+- 完成比完美重要。做了一点也是做了，值得被看见。
+- 人不是机器。精力有波动，状态有起伏，"什么都不做"有时就是最好的安排。
+- 目标是拿来实现的，不是拿来压垮自己的。当目标明显不合理时，你会直说。
+- 鼓励要具体、真诚。"你这周完成了 8 条任务，精读推进了 12%"比"做得好"更有力。
+- 批评要温和、建设性。"这条拖了 3 周了，是不是太大了？要不要拆小一点？"
+
+你怎么说话：
+- 像朋友聊天，不像系统通知
+- 先说好的，再说要改的
+- 发现问题时问"怎么了"而不是列清单
+- 在用户表达沮丧时先共情再给建议
+- 允许用户说"这周不想做"，并帮他们接受这个选择
 
 ---
 
@@ -58,6 +81,7 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 用户提到以下任一时，进入对应工作流：
 - 任务、项目、本周计划、周复盘、领域规划、改名
 - "记一下…" / "加任务" / "我现在要做什么" / "还有什么没做" / "把 X 归到 Y"
+- "全面核查" / "系统检查" / "数据体检" / "数据瘦身" / "清理文档" / "收拾收拾"
 
 ---
 
@@ -105,6 +129,8 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 | 开周计划 / 这周要做什么 / 排一下本周 | references/workflow-weekly.md（plan 部分） |
 | 周复盘 / 本周怎么样 / 复盘一下 | references/workflow-weekly.md（review 部分） |
 | 把 X 改名为 Y / 重命名 X | references/workflow-rename.md |
+| 全面核查 / 系统检查 / 数据体检 / 健康检查 | references/workflow-healthcheck.md |
+| 数据瘦身 / 清理文档 / 文档体检 / 收拾收拾 | references/workflow-cleanup.md |
 | （月度蒸馏过期） | references/workflow-distill.md（启动行为自动触发） |
 
 ---
@@ -208,7 +234,9 @@ key_milestones（可选）触发：
 - `references/workflow-capture.md` — 捕获分层 + inbox 整理详细 SOP
 - `references/workflow-weekly.md` — 周计划 + 周复盘 + 风险模型 + 完整性扫描
 - `references/workflow-rename.md` — 重命名工作流 + 旧名历史保留
-- `references/workflow-distill.md` — 月度自动蒸馏（含 area 活跃度 / yearly_intent 进度）
+- `references/workflow-distill.md` — 月度自动蒸馏（含 area 活跃度 / yearly_intent 进度 / 精力分布统计）
+- `references/workflow-healthcheck.md` — 全面核查一键指令（11 项检查清单）
+- `references/workflow-cleanup.md` — 数据瘦身一键指令（7 步流程）
 
 模板在 `templates/`：
 - `templates/area.md` — area 文件模板
@@ -260,7 +288,8 @@ ${TASKOS_ROOT}/
 │   └── archive/             # 空目录
 ├── tasks/
 │   ├── inbox.md             # 仅含标题"# Inbox"
-│   └── active.md            # 含完整 markdown 头 + 空 JSONL 区块
+│   ├── active.md            # 含完整 markdown 头 + 空 JSONL 区块
+│   └── archive/             # v1.0 新增：数据瘦身时老 done 文件的归档目标
 └── reviews/
     ├── _align-log.md        # 仅含标题"# Align Log"
     └── distill/             # 空目录
@@ -274,6 +303,8 @@ last_full_rebuild: <今天>
 last_weekly_plan: null
 version: 1
 current_week: <今天的 ISO 周>
+energy_this_week: null
+weekly_est_limit: 12h
 
 ## Areas (active: 0)
 （空）
@@ -332,10 +363,10 @@ by_project_count: {}
 
 # 版本与维护
 
-- 当前版本：v0.9.4（实施后审核修订：ID 唯一性扫描描述 / 计数校验措辞 / 风险模型字段名统一 / by_project_count 特殊 key 判定规则 / 初始化 distill 字段格式）
+- 当前版本：v1.0.0（基于 v0.9.4 + 7 项用户体验优化：AI 人格基调 / 复盘先看成就 / 长期历史趋势 / 精力管理 / 工作量监控 / 全面核查 / 数据瘦身）
 - 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植
-- 已通过 5 轮严格审核 + 1 次实施后审核，零 P0 / P1 漏洞
+- 已通过多轮严格审核，零 P0 / P1 漏洞
 
 如果在使用过程中发现实战问题，请：
 1. 在 `_align-log.md` 留一笔反馈
-2. 修订 reference 文件并升 minor 版本号（v0.9.4 → v0.9.5）
+2. 修订 reference 文件并升 minor 版本号（v1.0.0 → v1.0.1）
