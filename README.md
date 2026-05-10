@@ -28,6 +28,18 @@ AI skill 定义文件备份仓库（私有）。
 
 ## 更新日志
 
+### v1.0.0 (2026-05-10)
+- **AI 人格基调**：SKILL.md 加入诤友式陪伴性格描述
+- **精力管理**：weekly plan 新增精力状态询问，动态调整排期上限
+- **工作量监控**：排期后自动估算总工时，超限+留白提醒
+- **复盘先看成就**：review 开头先列本周完成 task
+- **长期历史趋势**：展示近 N 周完成量/carry/core 推进/精力趋势
+- **全面核查**：新增一键指令（11 项检查，纯只读）
+- **数据瘦身**：新增一键指令（7 步流程，先报告再动手）
+- **精力分布统计**：月度蒸馏新增精力-产出对照
+- 新建：workflow-healthcheck.md / workflow-cleanup.md
+- 修改：SKILL.md / schema.md / workflow-weekly.md / workflow-distill.md
+
 ### 2026-05-10 首次上传
 - 全部 10 个 skill 定义文件上传
 - 仓库结构：taskos/ 下完整镜像本地 skill 目录
