@@ -199,6 +199,8 @@ last_full_rebuild: 2026-05-04 (W18 review)
 last_weekly_plan: 2026-05-10
 version: 287
 current_week: 2026-W19
+energy_this_week: normal               # v1.0 新增：本周精力状态（high / normal / low）
+weekly_est_limit: 12h                  # v1.0 新增：每周工作量软上限（用户可设）
 
 ## Areas (active: 4)
 - 心理学 (core: 1, normal: 2, side: 0)
@@ -249,6 +251,7 @@ range: 2026-05-04 ~ 2026-05-10
   - `version += 1`
   - 如果改变了 due_week / tier / 任务完成状态 → 重新生成"当前周"段
 - weekly plan 结束时刷新 `last_weekly_plan`
+- weekly plan 时刷新 `energy_this_week`（用户回答精力状态后写入：high / normal / low）
 - weekly review 结束时刷新 `last_full_rebuild` 并完整重建 INDEX
 
 ### "已完成本周"子段查询规则
@@ -346,8 +349,8 @@ gap               = actual_progress - expected_progress
 - 错误提示 / 用户对话模板
 
 ### 必须英文（机器可读性）
-- YAML 键名：`type`, `name`, `area`, `priority`, `deadline`, `status`, `progress`, `risk`, `key_milestones`, `yearly_intent`, `rituals`, `identity`, `created`, `milestone`, `desc`, `freq`
-- YAML 枚举值：`active / dormant / retired`、`core / normal / side`、`active / paused / done / dropped`、`pending / done`、`weekly / monthly`
+- YAML 键名：`type`, `name`, `area`, `priority`, `deadline`, `status`, `progress`, `risk`, `key_milestones`, `yearly_intent`, `rituals`, `identity`, `created`, `milestone`, `desc`, `freq`, `energy_this_week`, `weekly_est_limit`, `energy`
+- YAML 枚举值：`active / dormant / retired`、`core / normal / side`、`active / paused / done / dropped`、`pending / done`、`weekly / monthly`、`high / normal / low`（energy）
 - JSONL 字段名：`id / title / projects / area / context / est / carry / due_week / tier / captured / completed / outcome / week / ritual_source / ritual_desc / freq`
 - JSONL 字段枚举值：`must / should / could`（tier）、`done / dropped`（outcome）、`weekly / monthly`（freq）
 - ID 格式、ISO 周编号、TASKOS_ROOT 变量名、skill 自身文件名
@@ -355,3 +358,21 @@ gap               = actual_progress - expected_progress
 ### 用户自由
 - area / project 名称：中文优先
 - title / context / milestone / identity / yearly_intent / rituals.desc：自由书写
+
+---
+
+## 十一、Review 文件 frontmatter 规范
+
+```yaml
+---
+type: review
+week: 2026-W19
+range: 2026-05-12 ~ 2026-05-18
+generated: 2026-05-18
+energy: normal                         # v1.0 新增：high / normal / low（从 INDEX.energy_this_week 取值）
+---
+```
+
+**字段说明**：
+- `energy`：本周精力状态，来源于 INDEX.energy_this_week。若用户跳过 weekly plan 直接 review，此字段可能为空 → review 时 AI 先问"这周精力怎样？"再继续。
+- review 文件用于永久存档当周快照 + 项目进展 + 趋势数据，供月度蒸馏和长期回顾使用。
