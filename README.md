@@ -1,57 +1,35 @@
 # FOR_AI
 
-AI skill 定义文件备份仓库（私有）。
+AI Agent 的个人技能仓库（private）。
 
----
+## 目录
 
-## taskos/
+- `taskos/` — TaskOS 个人任务管理 Skill
 
-**TaskOS** — 通用个人任务管理 skill
+## TaskOS Skill
 
-基于「领域 (Areas) → 项目 (Projects) → 任务 (Tasks)」三层结构，帮助用户管理长期目标和每周行动。
+基于「领域/项目/任务」三层 SOP 的通用个人任务管理 skill。
 
-**核心特点**：
-- 任务永不丢失（JSONL 中央池）
-- 风险驱动（自动计算项目健康度）
-- 懒人友好（两周不开也能温和重启）
-- 跨 AI agent 可移植（不依赖私有工具）
+- 版本：v1.2.0
+- 兼容：Claude Code / Cursor / OpenClaw / WorkBuddy 等支持 Anthropic 风格 skill 的 agent
+- 数据格式：纯 Markdown + JSONL，跨 agent 可移植
 
-**文件结构**：
-- `SKILL.md` — 主入口，启动行为 + 工作流路由 + 强制规则
-- `references/` — 详细工作流 SOP（capture / weekly / rename / retrospect / healthcheck / cleanup / migration）+ 数据模型
-- `templates/` — area / project / JSONL 行模板
+### 更新日志
 
-**当前版本**：v1.1.0
-
----
-
-## 更新日志
-
-### v1.1.0 (2026-05-11)
-- **精简历史记录**：合并双日志（journal 吸收 _align-log），journal 改为单行格式
-- **砍掉月度蒸馏预存**：删除 workflow-distill.md 和 reviews/distill/ 目录，改为按需实时生成
-- **去掉 active.md/done-*.md 顶部统计**：AI 按需计数，减少写放大
-- **复盘能力增强**：周快照文件改为纯结构化数据（项目状态 + 上下文分布 + carry 趋势）
-- **自动最小快照**：current_week 切换时自动保存上周快照，保证时间线连续
-- **决策记录**：journal 新增 [decision] 标记，可追溯关键决策
-- **手动复盘工作流**：新增 workflow-retrospect.md（替代 distill，从快照实时生成趋势分析）
-- **Skill 更新迁移指引**：新增 migration.md，手动触发数据迁移
-- 新建：workflow-retrospect.md / migration.md
-- 删除：workflow-distill.md
-- 修改：SKILL.md / schema.md / workflow-weekly.md / workflow-capture.md / workflow-rename.md / workflow-healthcheck.md / workflow-cleanup.md / active-jsonl-line.md
-
-### v1.0.0 (2026-05-10)
-- **AI 人格基调**：SKILL.md 加入诤友式陪伴性格描述
-- **精力管理**：weekly plan 新增精力状态询问，动态调整排期上限
-- **工作量监控**：排期后自动估算总工时，超限+留白提醒
-- **复盘先看成就**：review 开头先列本周完成 task
-- **长期历史趋势**：展示近 N 周完成量/carry/core 推进/精力趋势
-- **全面核查**：新增一键指令（11 项检查，纯只读）
-- **数据瘦身**：新增一键指令（7 步流程，先报告再动手）
-- **精力分布统计**：月度蒸馏新增精力-产出对照
-- 新建：workflow-healthcheck.md / workflow-cleanup.md
-- 修改：SKILL.md / schema.md / workflow-weekly.md / workflow-distill.md
-
-### 2026-05-10 首次上传
-- 全部 10 个 skill 定义文件上传
-- 仓库结构：taskos/ 下完整镜像本地 skill 目录
+- **v1.2.0**（2026-05-11）：AI 主动规划能力 + 全面用户画像
+  - 新增 Nudge 机制：启动时主动扫描停滞/堆积/失衡，给出执行建议
+  - 新增 Strategy 工作流：长期目标路线图设计/研究/检视/调整（手动触发，AI 搜索多源交叉验证）
+  - Strategy 作为特殊 project（type: strategy），不占 core 槽位，不受 90 天 deadline 约束
+  - 新增全面用户画像（profile.md，8 大维度），支撑个性化建议
+  - 冷启动"认识你"对话（分 2~3 次自然聊天）
+  - 启动询问优先级规则（避免同时轰炸用户）
+  - 全面核查从 10 项增至 13 项
+  - 新增强制规则：AI 建议不得自动写入
+  - 新建 workflow-strategy.md
+  - 修改 7 个文件
+- **v1.1.0**（2026-05-11）：精简历史记录 + 复盘能力增强 + Skill 更新指引
+  - 合并双日志 + 砍掉月度蒸馏预存
+  - 结构化周快照 + 决策记录 + 自动最小快照
+  - 新增 migration.md 手动触发迁移
+- **v1.0.0**（2026-05-10）：首版发布
+  - 三层 SOP + JSONL 中央池 + 风险模型 + AI 人格基调
