@@ -174,6 +174,14 @@ gap               = actual_progress - expected_progress
 - INDEX.last_weekly_plan = 今天日期
 - INDEX.energy_this_week = 本次精力状态
 
+### 1.10 Nudge 附加（v1.2 新增）
+
+周计划生成完成后，如 INDEX.proactive.nudge == on：
+- 检查是否有 strategy 子 project 在本周无任务排期
+- 如有 → 温和提醒："xxx 路线图的「yyy」项目这周没排任务，需要加一条吗？"
+- 不强制，用户可忽略
+- 用户响应后走 journal [nudge]
+
 ---
 
 ## 二、Weekly Review（周复盘）
@@ -303,6 +311,20 @@ energy: normal
 ### 2.8 side 项目 🔴 提示
 
 如果有 side 项目处于 🔴，单独列出来提示，但不强制处理。
+
+### 2.9 Nudge 段（v1.2 新增）
+
+- 如 INDEX.proactive.nudge == on
+- 基于本周完成数据 + 下周排期状况，输出 ≤ 2 条建议
+- 语气参考 profile.md 沟通偏好（如有）
+- 用户响应后走 journal [nudge]
+
+### 2.10 Strategy 关联检查（v1.2 新增）
+
+- 如有 active strategy project
+- 检查本周是否有关联子 project 的任务完成
+- 简要关联到路线图当前阶段进度（如"词汇项目本周完成 3 条，阶段 1 整体 65%"）
+- 纯信息展示，不做写操作
 
 ---
 
