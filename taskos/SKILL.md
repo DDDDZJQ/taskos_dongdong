@@ -3,7 +3,7 @@ name: taskos
 description: "通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
-version: 1.2.0
+version: 1.2.1
 license: MIT
 metadata:
   category: productivity
@@ -19,12 +19,16 @@ metadata:
 # 数据根目录（换设备时改这一行）
 
 ```
-TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
+TASKOS_ROOT: ~/TaskOS
 ```
 
-> 不同 OS 下示例：
-> - Windows: `C:\Users\jqdzhang\TaskOS`
-> - macOS / Linux: `~/TaskOS` 或 `/Users/jqdzhang/TaskOS`
+> AI 运行时将 `~` 展开为当前用户的 home 目录。
+> 不同 OS 下等价于：
+> - Windows: `C:\Users\{用户名}\TaskOS`
+> - macOS: `/Users/{用户名}/TaskOS`
+> - Linux: `/home/{用户名}/TaskOS`
+>
+> 如需自定义位置，直接改为绝对路径即可。
 >
 > 路径变更只需改这一行；其他文件中所有路径用相对路径。
 
@@ -440,7 +444,7 @@ range: <周一> ~ <周日>
 
 # 版本与维护
 
-- 当前版本：v1.2.0（基于 v1.1.0 + 2 项功能新增：AI 主动规划能力 / 全面用户画像）
+- 当前版本：v1.2.1（v1.2.0 + 路径通用化 + 项目偏好记录）
 - 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植 + 主动推动但不越权
 - 已通过多轮严格审核，零 P0 / P1 漏洞
 
