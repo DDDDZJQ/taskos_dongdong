@@ -8,20 +8,13 @@
 
 ```markdown
 # Active Tasks
-last_updated: 2026-05-10 05:18
-total: 47
-by_project_count:
-  精读《动力取向心理治疗》: 12
-  播客第 5 期录制: 8
-  _orphan: 3
-  _ritual: 4
-
 ## ~~~ JSONL 区块开始 ~~~
 （每行一个 JSON 对象，详见下方示例）
 ## ~~~ JSONL 区块结束 ~~~
 ```
 
 > done-YYYY-MM.md 标题为 `# Done Tasks YYYY-MM`，其余结构相同。
+> v1.1 变更：无顶部元数据（无 last_updated/total/by_project_count）。AI 需要计数时直接数 JSONL 行。
 
 ---
 
