@@ -18,15 +18,27 @@ AI skill 定义文件备份仓库（私有）。
 
 **文件结构**：
 - `SKILL.md` — 主入口，启动行为 + 工作流路由 + 强制规则
-- `references/` — 详细工作流 SOP（capture / weekly / rename / distill）+ 数据模型
+- `references/` — 详细工作流 SOP（capture / weekly / rename / retrospect / healthcheck / cleanup / migration）+ 数据模型
 - `templates/` — area / project / JSONL 行模板
-- `待优化记录.md` — 已知问题和改进方向
 
-**当前版本**：v0.9.4
+**当前版本**：v1.1.0
 
 ---
 
 ## 更新日志
+
+### v1.1.0 (2026-05-11)
+- **精简历史记录**：合并双日志（journal 吸收 _align-log），journal 改为单行格式
+- **砍掉月度蒸馏预存**：删除 workflow-distill.md 和 reviews/distill/ 目录，改为按需实时生成
+- **去掉 active.md/done-*.md 顶部统计**：AI 按需计数，减少写放大
+- **复盘能力增强**：周快照文件改为纯结构化数据（项目状态 + 上下文分布 + carry 趋势）
+- **自动最小快照**：current_week 切换时自动保存上周快照，保证时间线连续
+- **决策记录**：journal 新增 [decision] 标记，可追溯关键决策
+- **手动复盘工作流**：新增 workflow-retrospect.md（替代 distill，从快照实时生成趋势分析）
+- **Skill 更新迁移指引**：新增 migration.md，手动触发数据迁移
+- 新建：workflow-retrospect.md / migration.md
+- 删除：workflow-distill.md
+- 修改：SKILL.md / schema.md / workflow-weekly.md / workflow-capture.md / workflow-rename.md / workflow-healthcheck.md / workflow-cleanup.md / active-jsonl-line.md
 
 ### v1.0.0 (2026-05-10)
 - **AI 人格基调**：SKILL.md 加入诤友式陪伴性格描述
