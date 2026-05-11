@@ -3,7 +3,7 @@ name: taskos
 description: "通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
-version: 1.1.0
+version: 1.2.0
 license: MIT
 metadata:
   category: productivity
@@ -74,6 +74,10 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 5. 启动时比对 INDEX.current_week 与今天的 ISO 周（用日期计算，不能字符串递增）；
    不一致时先自动保存上周最小快照（reviews/YYYY-Www.md），再询问用户"要不要现在开周计划？"；
    若用户拒绝，AI 自动更新 INDEX.current_week 为今天 ISO 周并重生成当前周段（走 journal）。
+
+6. AI 的所有 nudge 和 strategy 建议仅是建议，不得自动写入 active.md 或修改 project 文件。
+   必须获得用户明确确认后才能执行对应写操作。
+   搜索研究结果中的推荐内容必须标注来源和置信度（✅ 多源验证 / ⚠️ 单源 / ❓ AI 推测）。
 ```
 
 ---
@@ -86,6 +90,8 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 - "全面核查" / "系统检查" / "数据体检" / "数据瘦身" / "清理文档" / "收拾收拾"
 - "回顾" / "看看趋势" / "看看历史" / "我最近怎么样"
 - "执行迁移" / "升级数据" / "数据迁移"
+- "帮我规划" / "制定计划" / "路线图" / "长期目标" / "更新路线图" / "检视进度" / "搜索资源"
+- "认识我" / "更新画像" / "我的画像"
 
 ---
 
@@ -120,6 +126,43 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
    - 计算今天 - INDEX.last_weekly_plan
    - > 7 天 → 标记下次 weekly plan 走对齐流程（详见 workflow-weekly.md）
 
+8. 读取 `${TASKOS_ROOT}/profile.md`（如存在，加载到上下文供后续使用）
+
+9. **Nudge 扫描**（如 INDEX.proactive.nudge == on）：
+   - 先清理 INDEX 中过期的 nudge 冷却项（冷却周 < current_week）
+   - 扫描条件（按优先级，最多 2 条）：
+     a. core 项目停滞：连续 2 周 progress 未变（对比最近 2 个周快照；快照 < 2 个时跳过）
+     b. carry ≥ 3 堆积：active.md 中 carry >= 3 的任务
+     c. 上下文分布失衡：单一 context 占比 > 60%
+     d. 任务池空档：active.md 中 due_week == 本周的任务 < 3 条
+   - active.md 为空 → 跳过全部 nudge
+   - 输出建议（朋友式语气，一句话）；用户响应后走 journal [nudge]
+
+10. **Strategy 季度检视提醒**（如 INDEX.proactive.strategy == on）：
+    - 检查 projects/active/ 中 type: strategy 的文件
+    - 如有 active strategy 且 last_reviewed 超过 3 个月 → 温和提醒
+
+11. **Profile 冷启动检测**：
+    - profile.md 不存在 或 frontmatter completeness < 0.3 → 标记待发起"认识你"对话
+
+---
+
+# 启动询问优先级规则（避免同时轰炸用户）
+
+每次启动最多主动发起 1 个阻塞性对话：
+
+| 优先级 | 条件 | 行为 |
+|--------|------|------|
+| 1（最高） | 未配对 [in_progress] | 必须优先处理崩溃恢复 |
+| 2 | current_week 不一致 | 询问周计划（先存快照） |
+| 3 | Nudge 有建议 | 附带在问候中，不阻塞 |
+| 4 | Strategy 检视提醒 | 一句话提醒，不阻塞 |
+| 5（最低） | Profile 冷启动 | 延迟到当次交互结束后再发起 |
+
+- 优先级 1~2 阻塞性（必须处理完才继续）
+- 优先级 3~4 非阻塞（嵌入正常问候）
+- 优先级 5 永远不与 1~2 同时出现：本次触发了周计划或崩溃恢复，profile 推迟到下次启动
+
 ---
 
 # 工作流路由
@@ -134,6 +177,8 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 | 数据瘦身 / 清理文档 / 文档体检 / 收拾收拾 | references/workflow-cleanup.md |
 | 回顾 / 看看趋势 / 看看历史 / 我最近怎么样 / 复盘一下最近 | references/workflow-retrospect.md |
 | 执行迁移 / 升级数据 / 数据迁移 | references/migration.md |
+| 帮我规划 / 制定计划 / 路线图 / 长期目标 / 更新路线图 / 检视进度 / 搜索资源 | references/workflow-strategy.md |
+| 认识我 / 更新画像 / 我的画像 | 直接读写 profile.md（无独立工作流文件） |
 
 ---
 
@@ -173,6 +218,11 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 | 改 progress | risk 是否需重算 |
 | Rename | 全局检查旧名是否还有残留（除 done-*.md 外）；INDEX 同步；journal 记一笔 [align]；priority/status/area 等其他字段未被误改 |
 | current_week 修正（启动行为自动） | 先保存上周最小快照；走 journal；当前周快照重生成 |
+| 创建 strategy project | type: strategy 有 milestones 段；INDEX 同步（Strategy Projects 段）；journal [strategy] |
+| 创建子 project（有 parent_strategy） | parent_strategy 指向的 strategy project 存在且 active；INDEX 同步 |
+| Strategy 检视 | last_reviewed 已更新；进度检视记录已追加；journal [strategy] |
+| Profile 写入 | completeness 已重算；last_updated 已刷新 |
+| Nudge 采纳 | 对应操作已执行 + journal [nudge]；拒绝时冷却已写入 INDEX |
 
 不一致 → 立即提示用户 + 给修复建议（不擅自修复）。
 
@@ -207,7 +257,7 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 
 # 优先级约束
 
-- 同时 active 的 core 项目 ≤ 3 个
+- 同时 active 的 core 项目 ≤ 3 个（strategy project 不计入 core 槽位）
 - 超出 → Mini-Check 立即告警（不阻断，但提示降级）
 
 ---
@@ -241,6 +291,9 @@ key_milestones（可选）触发：
 优先级加权：
 - core 🟡 → 视为 🔴 提示
 - side 🔴 → 仅 weekly review 时提示
+
+注意：type: strategy 的 project 不参与风险模型计算（时间跨度太长，gap 公式无意义）。
+其子 project（普通 project）正常参与。
 ```
 
 ---
@@ -254,7 +307,8 @@ key_milestones（可选）触发：
 - `references/workflow-weekly.md` — 周计划 + 周复盘 + 风险模型 + 完整性扫描
 - `references/workflow-rename.md` — 重命名工作流 + 旧名历史保留
 - `references/workflow-retrospect.md` — 手动复盘（从周快照实时生成趋势分析）
-- `references/workflow-healthcheck.md` — 全面核查一键指令（10 项检查清单）
+- `references/workflow-strategy.md` — Strategy 工作流（路线图创建/研究/检视/调整）
+- `references/workflow-healthcheck.md` — 全面核查一键指令（13 项检查清单）
 - `references/workflow-cleanup.md` — 数据瘦身一键指令（5 步流程）
 - `references/migration.md` — Skill 更新迁移指引
 
@@ -301,6 +355,7 @@ key_milestones（可选）触发：
 ${TASKOS_ROOT}/
 ├── README.md
 ├── INDEX.md                 # 初始版本：current_week 设为今天 ISO 周，version: 1
+├── profile.md               # v1.2 新增：用户画像（空模板）
 ├── .journal.md              # 仅一条初始化 [done] 记录
 ├── areas/                   # 空目录
 ├── projects/
@@ -324,7 +379,10 @@ version: 1
 current_week: <今天的 ISO 周>
 energy_this_week: null
 weekly_est_limit: 12h
-data_schema: 1.1.0
+data_schema: 1.2.0
+proactive:
+  nudge: on
+  strategy: on
 
 ## Areas (active: 0)
 （空）
@@ -336,6 +394,9 @@ data_schema: 1.1.0
 （空）
 
 ## Projects — Side (0)
+（空）
+
+## Strategy Projects
 （空）
 
 ## Tasks Pool 概览
@@ -355,6 +416,9 @@ range: <周一> ~ <周日>
 ### 可以做（could, ≤5）
 
 ### 已完成本周
+
+## Nudge 冷却
+（空）
 ```
 
 初始化 active.md 模板：
@@ -376,10 +440,10 @@ range: <周一> ~ <周日>
 
 # 版本与维护
 
-- 当前版本：v1.1.0（基于 v1.0.0 + 3 项结构性优化：精简历史记录 / 复盘能力增强 / Skill 更新指引）
-- 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植
+- 当前版本：v1.2.0（基于 v1.1.0 + 2 项功能新增：AI 主动规划能力 / 全面用户画像）
+- 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植 + 主动推动但不越权
 - 已通过多轮严格审核，零 P0 / P1 漏洞
 
 如果在使用过程中发现实战问题，请：
 1. 在 `.journal.md` 写一条 `[align]` 记录
-2. 修订 reference 文件并升 patch 版本号（v1.1.0 → v1.1.1）
+2. 修订 reference 文件并升 patch 版本号（v1.2.0 → v1.2.1）
