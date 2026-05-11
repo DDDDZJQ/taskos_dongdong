@@ -9,16 +9,14 @@
 | 文件 | 格式 |
 |---|---|
 | `INDEX.md` | Markdown（含表格、列表、当周快照） |
-| `.journal.md` / `.journal-YYYY-MM.md` | Markdown，append-only 时间戳日志 |
+| `.journal.md` / `.journal-YYYY-MM.md` | 单行日志格式（append-only） |
 | `areas/{中文名}.md` | Markdown + YAML frontmatter |
 | `projects/active/{中文名}.md` | Markdown + YAML frontmatter |
 | `projects/archive/{中文名}.md` | 同上 |
 | `tasks/inbox.md` | Markdown checklist |
-| `tasks/active.md` | Markdown 顶部元数据 + JSONL 区块 |
-| `tasks/done-YYYY-MM.md` | Markdown 顶部元数据 + JSONL 区块 |
-| `reviews/YYYY-Www-review.md` | Markdown |
-| `reviews/_align-log.md` | Markdown 列表，按日期分组 |
-| `reviews/distill/YYYY-MM.md` | Markdown |
+| **`tasks/active.md`** | **标题 + JSONL 区块** |
+| **`tasks/done-YYYY-MM.md`** | **标题 + JSONL 区块** |
+| `reviews/YYYY-Www.md` | Markdown + YAML frontmatter（结构化周快照） |
 
 ---
 
@@ -80,26 +78,15 @@ key_milestones:
 ### 4.1 active.md / done-YYYY-MM.md 整体结构
 
 ```markdown
-# Active Tasks                          # done-*.md 标题为 "Done Tasks YYYY-MM"
-last_updated: 2026-05-10 05:18
-total: 47
-by_project_count:
-  精读《动力取向心理治疗》: 12
-  播客第 5 期录制: 8
-  _orphan: 3                            # projects=[] 且非 ritual
-  _ritual: 4                            # ritual 任务（含 ritual_source）
-
+# Active Tasks
 ## ~~~ JSONL 区块开始 ~~~
 {"id":"t-20260510-001","title":"精读第 3 章","projects":["精读《动力取向心理治疗》"],"area":null,"context":"@阅读","est":"90min","carry":0,"due_week":"2026-W19","tier":"must","captured":"2026-05-10"}
 {"id":"r-2026-W19-001","title":"精读 1 篇外刊封面文章","projects":[],"area":"心理学","context":"@阅读","est":"60min","carry":0,"due_week":"2026-W19","tier":"should","ritual_source":"心理学","ritual_desc":"精读 1 篇外刊封面文章","freq":"weekly","captured":"2026-05-10"}
 ## ~~~ JSONL 区块结束 ~~~
 ```
 
-**by_project_count 特殊 key 判定规则**：
-- `_ritual` = 任意含 `ritual_source` 字段的任务（typically `projects=[]` 且 `area != null`）
-- `_orphan` = `projects=[]` 且**不含** `ritual_source` 字段的任务（例如仅挂 area 的普通 task）
-- 其他 key = 任务的 `projects` 数组中每个 project 名（一个任务挂多 project 时计入每个 project 的 key）
-- 不变量：`sum(by_project_count.values()) ≥ total`（多挂任务会被多次计入；如果只想要单计可以用 _orphan + _ritual + 各 project 任务数去重计算，但默认按聚合计入）
+> done-YYYY-MM.md 标题为 `# Done Tasks YYYY-MM`，其余结构相同。
+> v1.1 变更：去掉 `last_updated` / `total` / `by_project_count` 顶部元数据。AI 需要计数时直接数 JSONL 行。
 
 ### 4.2 active.md 任务字段定义
 
@@ -160,15 +147,11 @@ by_project_count:
    - done 文件保留原 active 全字段（含 null）+ completed + outcome + week
 
 6. 解析鲁棒性：每行独立 JSON.parse，遇到坏行只跳过该行 + 在
-   _align-log.md 记一笔（🔴 级别），不影响其他行。
+   .journal.md 记一笔 [align]（格式：[时间] #NNN align | 坏行 active.md line X），不影响其他行。
 
 7. 任何对 active.md / done-*.md 的写操作都强制走 .journal.md（无例外）。
 
-8. 每次写操作后必须重算顶部元数据：
-   - last_updated（当前时间）
-   - total（JSONL 区块合法行数）
-   - by_project_count（按 projects 字段聚合 + _orphan + _ritual）
-   元数据若与 JSONL 不一致，以 JSONL 为准。
+8. JSONL 区块边界标识符是固定字面量，不允许翻译或修改。
 ```
 
 ---
@@ -199,8 +182,9 @@ last_full_rebuild: 2026-05-04 (W18 review)
 last_weekly_plan: 2026-05-10
 version: 287
 current_week: 2026-W19
-energy_this_week: normal               # v1.0 新增：本周精力状态（high / normal / low）
-weekly_est_limit: 12h                  # v1.0 新增：每周工作量软上限（用户可设）
+energy_this_week: normal               # 本周精力状态（high / normal / low）
+weekly_est_limit: 12h                  # 每周工作量软上限（用户可设）
+data_schema: 1.1.0                     # v1.1 新增：当前数据 schema 版本
 
 ## Areas (active: 4)
 - 心理学 (core: 1, normal: 2, side: 0)
@@ -239,20 +223,18 @@ range: 2026-05-04 ~ 2026-05-10
 （来源：done-YYYY-MM.md 中筛选 week == current_week 且 outcome == "done"；
 若 current_week 的日期范围跨两个月份（仅 W01 跨年时发生），需同时读两个月份的 done 文件）
 - [x] t-20260509-005 写文章大纲（2026-05-09）
-
-## 上次月度蒸馏
-- 2026-04（执行于 2026-05-01）
 ```
 
 ### INDEX 写入规则
 
-- 每个写操作（capture / weekly plan / weekly review / rename / archive / distill / 状态变更 / 完成 / 放弃）结束时**必须**：
+- 每个写操作（capture / weekly plan / weekly review / rename / archive / 状态变更 / 完成 / 放弃）结束时**必须**：
   - 刷新 `last_updated`
   - `version += 1`
   - 如果改变了 due_week / tier / 任务完成状态 → 重新生成"当前周"段
 - weekly plan 结束时刷新 `last_weekly_plan`
 - weekly plan 时刷新 `energy_this_week`（用户回答精力状态后写入：high / normal / low）
 - weekly review 结束时刷新 `last_full_rebuild` 并完整重建 INDEX
+- Tasks Pool 概览中的统计数据（active 总数、by_project 等）在每次刷新 INDEX 时从 active.md JSONL 行直接计算
 
 ### "已完成本周"子段查询规则
 
@@ -272,37 +254,63 @@ range: 2026-05-04 ~ 2026-05-10
 ### "上周" / "滞留" 计算
 
 - "上周" = 当前日期减 7 天 → 求其 ISO 周编号（**用日期计算，不能字符串递增**）
-- "滞留任务" = active.md 中 `due_week != null` 且 `due_week < current_week` 且未完成（**比较时把 ISO 周转成日期，避免字符串字典序歧义**）
+- "滞留任务" = active.md 中 `due_week != null` 且 `due_week < current_week`（**比较时把 ISO 周转成日期，避免字符串字典序歧义**）且未完成
 
 ### current_week 切换时机
 
-- 周复盘时：当周快照复制到 review 文件**永久存档**，**不立即切换 current_week**
-- 启动行为时：比对 INDEX.current_week 与今天 ISO 周；不一致 → 主动询问用户"要不要现在开周计划？"
+- 周复盘时：当周快照写入 review 文件**永久存档**，**不立即切换 current_week**
+- 启动行为时：比对 INDEX.current_week 与今天 ISO 周；不一致 → 先自动保存上周最小快照，再主动询问用户"要不要现在开周计划？"
   - 用户同意 → 进入 weekly plan 工作流
   - 用户拒绝 → AI 自动**只更新 INDEX.current_week 为今天 ISO 周**，并重新生成"当前周"段（基于 active.md 中 due_week == 新 current_week 的任务；可能为空），整个修正走 journal
 
 ---
 
-## 八、`.journal.md` 操作日志格式
+## 八、`.journal.md` 统一日志格式（v1.1 重新设计）
+
+### 路径
+- 当月：`${TASKOS_ROOT}/.journal.md`
+- 历史：`${TASKOS_ROOT}/.journal-YYYY-MM.md`
+
+### 格式：单行日志
 
 ```markdown
-## 2026-05-10 05:18:00 [in_progress] op=#287
-intent: 完成 task t-20260510-003
-files_planned:
-  - tasks/active.md (删除该 task 的 JSONL 行)
-  - tasks/done-2026-05.md (append 完整字段 + completed:2026-05-10 + outcome:done + week:2026-W19)
-  - INDEX.md (重生成当前周段)
-
-## 2026-05-10 05:18:03 [done] op=#287
+[2026-05-10 05:18] #287 done | complete t-20260510-003 → done-2026-05
+[2026-05-10 05:19] #288 done | capture t-20260510-004 → active
+[2026-05-10 06:00] #289 align | 坏行修复 active.md line 23
+[2026-05-10 07:30] #290 decision | drop project「雅思7.5」reason: 优先级调整，精力不足
+[2026-05-10 08:00] #291 in_progress | weekly-plan W20
+[2026-05-10 08:15] #291 done | weekly-plan W20
 ```
 
-### 启动检测
-- 读 `.journal.md` 末尾
-- 最后一条 `[in_progress]` 没配对 `[done]` → 提示用户"上次操作 op=#287 没完成，files_planned 是 [...]，是否：A 继续 / B 回滚 / C 标记已完成"
+### 标记类型
+
+| 标记 | 含义 | 用途 |
+|------|------|------|
+| `done` | 常规写操作已完成 | 大多数单步操作 |
+| `in_progress` | 多步操作开始 | 崩溃恢复检测；完成后写同 op 编号的 done |
+| `align` | 数据修复/手工干预/改名记录 | 原 _align-log 的全部职责 |
+| `decision` | 关键决策记录 | 复盘时可追溯"为什么" |
+
+### 崩溃恢复规则
+
+- 启动时读 `.journal.md` 末尾
+- 如果最后一条 `in_progress` 没有对应的 `done`（同一 op 编号）→ 告知用户
+- 处理选项：A 继续 / B 回滚 / C 标记已完成
 
 ### 月度归档
+
 - 每次启动时检查 `.journal.md` 中最早一条记录的月份
-- 早于当月 → 把所有早于当月的内容切到 `.journal-YYYY-MM.md`，当月留在 `.journal.md`
+- 早于当月 → 把所有早于当月的内容切到 `.journal-YYYY-MM.md`
+- 切片粒度：按记录的时间戳决定归属
+
+### 决策记录触发时机
+
+AI 在以下操作时自动写一条 `[decision]`：
+- drop 一个项目（含 reason）
+- 升降 priority（含 reason）
+- 调整 deadline（含 reason）
+- 将 area status 改为 dormant/retired（含 reason）
+- 用户在周计划中放弃某任务且给出了理由
 
 ### 触发条件
 **所有写操作都走 journal，无例外**。
@@ -349,7 +357,7 @@ gap               = actual_progress - expected_progress
 - 错误提示 / 用户对话模板
 
 ### 必须英文（机器可读性）
-- YAML 键名：`type`, `name`, `area`, `priority`, `deadline`, `status`, `progress`, `risk`, `key_milestones`, `yearly_intent`, `rituals`, `identity`, `created`, `milestone`, `desc`, `freq`, `energy_this_week`, `weekly_est_limit`, `energy`
+- YAML 键名：`type`, `name`, `area`, `priority`, `deadline`, `status`, `progress`, `risk`, `key_milestones`, `yearly_intent`, `rituals`, `identity`, `created`, `milestone`, `desc`, `freq`, `energy_this_week`, `weekly_est_limit`, `energy`, `data_schema`
 - YAML 枚举值：`active / dormant / retired`、`core / normal / side`、`active / paused / done / dropped`、`pending / done`、`weekly / monthly`、`high / normal / low`（energy）
 - JSONL 字段名：`id / title / projects / area / context / est / carry / due_week / tier / captured / completed / outcome / week / ritual_source / ritual_desc / freq`
 - JSONL 字段枚举值：`must / should / could`（tier）、`done / dropped`（outcome）、`weekly / monthly`（freq）
@@ -361,18 +369,75 @@ gap               = actual_progress - expected_progress
 
 ---
 
-## 十一、Review 文件 frontmatter 规范
+## 十一、周快照文件规范（v1.1 重新设计）
+
+### 文件命名
+`reviews/YYYY-Www.md`（如 `reviews/2026-W19.md`）
+
+### frontmatter
 
 ```yaml
 ---
-type: review
+type: weekly_snapshot
 week: 2026-W19
 range: 2026-05-12 ~ 2026-05-18
 generated: 2026-05-18
-energy: normal                         # v1.0 新增：high / normal / low（从 INDEX.energy_this_week 取值）
+energy: normal                         # high / normal / low（从 INDEX.energy_this_week 取值）
 ---
 ```
 
-**字段说明**：
-- `energy`：本周精力状态，来源于 INDEX.energy_this_week。若用户跳过 weekly plan 直接 review，此字段可能为空 → review 时 AI 先问"这周精力怎样？"再继续。
-- review 文件用于永久存档当周快照 + 项目进展 + 趋势数据，供月度蒸馏和长期回顾使用。
+### 正文结构（纯结构化数据，无自由文本）
+
+```markdown
+# 2026-W19 周快照
+
+## 项目状态
+- 精读《动力取向心理治疗》: {progress: 0.50, risk: 🟢, priority: core}
+- 播客第5期: {progress: 0.30, risk: 🟡, priority: core}
+- 雅思7.5: {progress: 0.20, risk: 🟢, priority: core}
+- 副项目X: {progress: 0.60, risk: 🟢, priority: normal}
+
+## 本周数据
+- planned: 10
+- completed: 8
+- dropped: 1
+- carry_out: 2
+- est_total: 9h
+
+## 上下文分布
+- @阅读: 5
+- @写作: 2
+- @电脑: 1
+- @电话: 0
+
+## carry 积压
+- total_carry_tasks: 12
+- carry_ge_3: 2
+
+## 当周任务快照
+### must
+- [x] t-20260510-001 精读第 3 章
+- [ ] t-20260511-002 联系督导
+### should
+- [x] r-2026-W19-001 精读 1 篇外刊
+- [ ] t-20260512-003 写播客大纲
+### could
+- [ ] t-20260513-004 整理书架
+```
+
+### 字段说明
+
+| 字段 | 含义 |
+|------|------|
+| `planned` | 本周排期的任务总数（due_week == 本周的非 ritual + ritual） |
+| `completed` | 本周完成的任务数（done-*.md 中 week == 本周 且 outcome == done） |
+| `dropped` | 本周放弃的任务数（done-*.md 中 week == 本周 且 outcome == dropped） |
+| `carry_out` | 本周排了但未完成将 carry 到下周的任务数（due_week == 本周 且未完成 且非 ritual） |
+| `est_total` | 本周排期任务的总估时（有 est 的累加，无 est 的按 1h 估算） |
+| `total_carry_tasks` | active.md 中所有 carry > 0 的任务数 |
+| `carry_ge_3` | active.md 中 carry ≥ 3 的任务数 |
+
+### 向后兼容
+- 旧格式的 review 文件（含 frontmatter `type: review`）AI 仍可正确读取
+- 新写的 review 文件用 `type: weekly_snapshot` 格式
+- 读快照时 AI 根据 frontmatter type 判断格式
