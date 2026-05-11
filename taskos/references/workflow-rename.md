@@ -23,20 +23,10 @@
 
 ### 步骤 2：journal [in_progress]
 
-记录意图和**完整 files_planned 清单**。
+记录意图。
 
 ```markdown
-## 2026-05-10 05:18:00 [in_progress] op=#NNN
-intent: 重命名 area「心理学」→「临床心理学」
-files_planned:
-  - areas/心理学.md → areas/临床心理学.md（改文件名 + frontmatter.name）
-  - projects/active/精读《动力取向心理治疗》.md（frontmatter.area: 心理学 → 临床心理学）
-  - projects/active/...（其他引用此 area 的 project）
-  - projects/archive/...（已归档但仍引用此 area 的 project）
-  - tasks/active.md（JSONL 中所有 area: "心理学" 改为 "临床心理学"；所有 ritual_source: "心理学" 改为 "临床心理学"）
-  - tasks/inbox.md（如有引用）
-  - INDEX.md（areas 列表 / projects 表 / 当前周快照中"→ X"引用 / by_project_count）
-  - reviews/_align-log.md（追加改名记录）
+[2026-05-10 05:18] #287 in_progress | rename area「心理学」→「临床心理学」
 ```
 
 ### 步骤 3：执行替换
@@ -67,17 +57,17 @@ files_planned:
 
 历史 done-*.md 中的引用（projects 数组、area、ritual_source）保持不变。
 
-### 步骤 5：写改名记录到 _align-log.md
+### 步骤 5：写改名记录到 .journal.md
 
 ```markdown
-## 2026-05-10 改名记录
-- area「X」→「Y」
-  - 改名日期：2026-05-10
-  - 历史 done-*.md 中 X 仍为 X
-  - 月度蒸馏统计时视 X 与 Y 为同一对象
+[2026-05-10 05:18] #288 align | rename area「心理学」→「临床心理学」, done-*.md 保留旧名
 ```
 
 ### 步骤 6：journal [done] + Mini-Check + INDEX 刷新
+
+```markdown
+[2026-05-10 05:18] #287 done | rename area「心理学」→「临床心理学」
+```
 
 ---
 
@@ -91,7 +81,7 @@ files_planned:
 - 同理 project 重命名
 
 ### 月度蒸馏的统计合并
-月度蒸馏（workflow-distill.md）在统计 area / project 完成数时，必须读 `_align-log.md` 中的改名历史，把"X 在 YYYY-MM-DD 改名为 Y"视为同一对象。
+复盘工作流（workflow-retrospect.md）在实时生成分析时，必须读 journal 中的 `[align]` 改名记录，把"X 在 YYYY-MM-DD 改名为 Y"视为同一对象。
 
 ### 不支持区域跨级重命名
 - 不能把 area 改名为 project，也不能反过来。
@@ -103,9 +93,9 @@ files_planned:
 
 | 检查项 | 说明 |
 |---|---|
-| 全局检查旧名是否还有残留（除 done-*.md 外） | 用 grep / 全文搜索旧名 X，应只在 done-*.md 和 _align-log.md 中存在 |
+| 全局检查旧名是否还有残留（除 done-*.md 外） | 用 grep / 全文搜索旧名 X，应只在 done-*.md 和 .journal.md 中存在 |
 | INDEX 同步 | areas 列表 / projects 表 / 当前周快照"→ X"引用 / by_project_count 都应为 Y |
-| _align-log.md 是否记一笔 | 必须有改名记录 |
+| journal 是否记一笔 [align] | 必须有改名记录 |
 | 其他字段未被误改 | priority / status / area / 等保持原值 |
 
 不一致 → 立即提示用户 + 给修复建议（不擅自修复）。
