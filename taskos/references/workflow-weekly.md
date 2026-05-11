@@ -13,13 +13,13 @@
 
 ```
 1. 懒人启动检测
-2. 精力状态询问（v1.0 新增）
+2. 精力状态询问
 3. 强制清 inbox
 4. 滞留任务处理
 5. Ritual 任务自动生成
 6. 项目体检（风险模型）
 7. 排期：必须做 / 该做 / 可以做 三档（根据精力动态调上限）
-8. 工作量估算 + 留白提醒（v1.0 新增）
+8. 工作量估算 + 留白提醒
 9. 写回 active.md（修改 due_week + tier）
 10. 重新生成 INDEX 当前周段
 11. 刷新 last_weekly_plan + energy_this_week
@@ -39,7 +39,7 @@
 
 - 用户回答后，更新 project frontmatter 的 progress + 自动重算 risk
 
-### 1.2 精力状态询问（v1.0 新增）
+### 1.2 精力状态询问
 
 AI 主动问：
 > 这周整体精力状态怎样？
@@ -58,7 +58,7 @@ AI 主动问：
 **低迷时 AI 主动建议**：
 > 状态不好的时候，只做 must 档就够了。could 全跳过，should 也可以砍。给自己留点空白。
 
-**记录位置**：精力状态写入 INDEX.energy_this_week 字段（high / normal / low），供趋势回顾和月度蒸馏使用。
+**记录位置**：精力状态写入 INDEX.energy_this_week 字段（high / normal / low），供周快照和复盘使用。
 
 **边界情况**：如果用户跳过了 weekly plan 直接做 review，此时 energy_this_week 可能为空 → review 时 AI 先问"这周精力怎样？"再继续。
 
@@ -145,9 +145,9 @@ gap               = actual_progress - expected_progress
 
 **操作**：修改 active.md 中相关任务的 `due_week` + `tier` 字段（用 id 定位 → 整行替换）。
 
-**整轮排期作为单次 journal 事务**：[in_progress] 列出所有计划改动 → 执行 → [done]。
+**整轮排期作为单次 journal 事务**：[in_progress] → 执行 → [done]。
 
-### 1.8 工作量估算 + 留白提醒（v1.0 新增）
+### 1.8 工作量估算 + 留白提醒
 
 排期完成后，AI 自动估算本周总工作量：
 
@@ -160,7 +160,7 @@ gap               = actual_progress - expected_progress
 **超限时主动提醒**：
 > "本周排了约 15h，超过你设的 12h 上限。建议砍掉 could 档的 2 条（约 3h），或者你觉得这周精力够？"
 
-**连续 3 周超限**（从近 3 周 review 文件中读取 est 总计）：
+**连续 3 周超限**（从近 3 周快照文件的 `est_total` 字段读取）：
 > "连续三周超负荷了。认真考虑一下：是上限设太低了，还是确实排太多了？"
 
 **留白提醒**（每次排期结束都说）：
@@ -179,63 +179,27 @@ gap               = actual_progress - expected_progress
 ## 二、Weekly Review（周复盘）
 
 ### 触发词
-- 周复盘 / 本周怎么样 / 复盘一下
+- 周复盘 / 本周怎么样
 
 ### 流程
 
 ```
-0. 本周成就回顾（v1.0 新增，先正向再看缺口）
-1. 长期历史趋势速览（v1.0 新增）
-2. 主动询问 core/normal active project 的 milestone 完成度
-3. side 项目用户可跳过；跳过的 AI 自动重算 risk
-4. 写回 progress + 重算 risk + 更新 INDEX 当周快照（单次 journal 事务）
-5. 完整性扫描 + INDEX 强制重建
-6. 把当前 INDEX 当周快照复制写入 review 文件作为永久存档（不切换 current_week）
+1. 主动询问 core/normal active project 的 milestone 完成度
+2. side 项目用户可跳过；跳过的 AI 自动重算 risk
+3. 写回 progress + 重算 risk（单次 journal 事务）
+4. 完整性扫描（4 项，问题记到 journal [align]）
+5. INDEX 强制重建
+6. 生成结构化周快照文件 reviews/YYYY-Www.md
 7. core 标签复审
 8. side 项目 🔴 提示
-9. 写 _align-log.md
 ```
 
-### 2.0 本周成就回顾（v1.0 新增）
-
-**数据来源**：done-YYYY-MM.md 中 `week == current_week` 且 `outcome == "done"` 的任务。
-
-**输出格式**：
-1. 先给一句总结："本周完成了 N 条任务，涉及 M 个项目"
-2. 按 area 分组列出每条已完成 task
-3. 语气：正向肯定、具体真诚
-
-**对比上周**：
-- 完成量比上周高 → 额外鼓励："比上周多了 3 条，势头不错"
-- 完成量比上周低但精力低迷 → 共情："这周状态不好，能完成这些已经很好了"
-- 完成量比上周低但精力正常 → 中性客观："比上周少了几条，看看是什么原因"
-
-### 2.1 长期历史趋势速览（v1.0 新增）
-
-**数据来源**：所有可用的 done-*.md + review 文件（不限 4 周，尽可能看更长时间段）。
-
-**呈现格式**（简明文字 + 方向箭头）：
-```
-趋势速览（近 N 周）：
-- 完成量：12 → 8 → 15 → 10 → 13（本周）↑
-- carry 积压：3 → 4 → 2 → 5 → 3 ↓
-- core 推进：精读 42%→50%→55% ↑ / 播客 18%→30% ↑ / 雅思 20%→20% →（停滞）
-- 精力记录：充沛 → 正常 → 低迷 → 正常 → 充沛
-```
-
-**长期视角**：如果有超过 8 周数据，还要给出"月度平均完成量"对比（本月 vs 上月 vs 上上月）。
-
-**结合精力**：将精力记录与完成量对照，帮用户看清"低迷周完成量低是正常的"。
-
-**停滞项目温和提醒**：对于停滞的 core 项目：
-> "精读连续 N 周没推进，是暂时搁置还是需要调整策略？"
-
-### 2.2 主动询问 progress
+### 2.1 主动询问 progress
 
 逐个 core / normal active project 询问：
 > 「精读《动力取向心理治疗》」：上次记录 progress=0.42。本周 milestone 完成度到了多少？（0-100%）
 
-### 2.3 side 项目跳过时的自动重算
+### 2.2 side 项目跳过时的自动重算
 
 公式：
 - actual_progress 取 frontmatter 当前值（不变）
@@ -243,9 +207,9 @@ gap               = actual_progress - expected_progress
 - gap = actual - expected → 套等级表
 - AI **写回 risk 字段，不更新 progress**（progress 是用户主观字段）
 
-### 2.4 完整性扫描（4 项）
+### 2.3 完整性扫描（4 项）
 
-写入 `reviews/_align-log.md`，🔴 级别：
+问题记到 `.journal.md`（[align] 标记）：
 
 1. active.md 中 task 的 `projects` 数组任一元素引用了不存在的 project
 2. project 引用了不存在的 area
@@ -256,9 +220,9 @@ gap               = actual_progress - expected_progress
 
 > ritual_source 不参与孤儿引用检查（rituals 字段被删时已生成的 ritual 任务靠 ritual_desc 自我描述，仍有效）。
 
-### 2.5 软提示（🟡）
+### 2.4 软提示（🟡）
 
-写入 `reviews/_align-log.md`，🟡 级别：
+问题记到 `.journal.md`（[align] 标记）：
 
 - active project 没挂 area
 - active project 超 deadline 仍未关闭
@@ -266,71 +230,79 @@ gap               = actual_progress - expected_progress
 - inbox 累计 > 20 条
 - side 项目处于 🔴
 
-### 2.6 INDEX 强制重建
+### 2.5 INDEX 强制重建
 
 末尾从所有源文件**完整重建** INDEX，刷新 `last_full_rebuild`。
 
-### 2.7 当周快照存档
+### 2.6 生成结构化周快照
 
-把当前 INDEX 当周快照段（含三档 + 已完成本周）**复制**写入 `reviews/2026-Www-review.md` 作为永久存档。
+写入 `reviews/YYYY-Www.md`（格式详见 schema.md 第十一节）：
+
+```yaml
+---
+type: weekly_snapshot
+week: 2026-W19
+range: 2026-05-12 ~ 2026-05-18
+generated: 2026-05-18
+energy: normal
+---
+```
+
+```markdown
+# 2026-W19 周快照
+
+## 项目状态
+- 精读《动力取向心理治疗》: {progress: 0.50, risk: 🟢, priority: core}
+- 播客第5期: {progress: 0.30, risk: 🟡, priority: core}
+
+## 本周数据
+- planned: 10
+- completed: 8
+- dropped: 1
+- carry_out: 2
+- est_total: 9h
+
+## 上下文分布
+- @阅读: 5
+- @写作: 2
+- @电脑: 1
+
+## carry 积压
+- total_carry_tasks: 12
+- carry_ge_3: 2
+
+## 当周任务快照
+### must
+- [x] t-20260510-001 精读第 3 章
+### should
+- [x] r-2026-W19-001 精读 1 篇外刊
+- [ ] t-20260512-003 写播客大纲
+### could
+- [ ] t-20260513-004 整理书架
+```
+
+**数据来源**：
+- `项目状态` = 所有 active project 的 progress/risk/priority
+- `planned` = active.md 中 due_week == current_week 的任务数
+- `completed` = done-*.md 中 week == current_week 且 outcome == done
+- `dropped` = done-*.md 中 week == current_week 且 outcome == dropped
+- `carry_out` = active.md 中 due_week == current_week 且未完成 且非 ritual
+- `est_total` = 排期任务 est 累加（无 est 按 1h）
+- `上下文分布` = 排期任务按 context 字段聚合
+- `carry 积压` = active.md 中 carry > 0 / carry ≥ 3 的计数
 
 > **注意**：不切换 INDEX.current_week。current_week 只在下次 weekly plan 时切换（或启动行为时用户拒绝开 plan 自动修正）。
 
-### 2.8 core 标签复审
+### 2.7 core 标签复审
 
 > 当前 core 项目：[精读《...》, 播客第 5 期, 雅思 7.5]
 > 这 3 个还是你最看重的吗？最近一个月有没有别的项目应该升 core？
 
 如果用户想调整 → 通过 capture 的 priority 修改流程操作。
 
-### 2.9 side 项目 🔴 提示
+### 2.8 side 项目 🔴 提示
 
 如果有 side 项目处于 🔴，单独列出来提示，但不强制处理。
-
-### 2.10 review 文件结构
-
-```markdown
----
-type: review
-week: 2026-W19
-range: 2026-05-04 ~ 2026-05-10
-generated: 2026-05-10
-energy: normal                         # v1.0 新增：high / normal / low
----
-
-# 2026-W19 周复盘
-
-## 本周成就（v1.0 新增，位于最前面）
-本周完成了 8 条任务，涉及 3 个项目。
-- 心理学（5 条）：精读第 3-5 章 / 联系督导 / ...
-- 自媒体（2 条）：录播客 / 写大纲
-- 日常生活（1 条）：整理书架
-
-## 趋势速览（v1.0 新增）
-近 8 周趋势：
-- 完成量：12 → 8 → 15 → 10 → 13 → 9 → 11 → 8（本周）
-- carry 积压：3 → 4 → 2 → 5 → 3 → 4 → 2 → 3
-- core 推进：精读 42%→50%→55%→58% ↑ / 播客 18%→30%→35% ↑
-- 精力记录：充沛 → 正常 → 低迷 → 正常 → 充沛 → 正常 → 低迷 → 正常
-- 月度平均完成量：4 月 11.2 条/周 → 5 月 9.5 条/周
-
-## 项目进展
-- 精读《动力取向心理治疗》（core）：progress 0.42 → 0.50（🟢）
-- 播客第 5 期录制（core）：progress 0.18 → 0.30（🔴 → 🟡）
-- ...
-
-## 当周快照（永久存档）
-（从 INDEX 复制的当周快照原文）
-
-## 软提示与完整性扫描
-（参见 _align-log.md 当周条目）
-
-## core 复审结果
-- 当前 core 不变 / 调整：X 升 core，Y 降 normal
-
-## 备注
-（用户自由记录的本周感受）
-```
 
 ---
 
@@ -348,13 +320,13 @@ energy: normal                         # v1.0 新增：high / normal / low
   ↓
 询问 progress → 重算 risk → 完整性扫描 → INDEX 强制重建
   ↓
-当周快照复制到 review 文件存档
+生成结构化周快照存档 reviews/YYYY-Www.md
   ↓
-core 复审 + side 🔴 提示 + 写 _align-log
+core 复审 + side 🔴 提示
   ↓
 （review 完成后 current_week 仍是本周）
   ↓
-下周一（或下次 plan）→ AI 计算今天的 ISO 周 → 切换 current_week → 重新生成当周快照
+下周一（或下次启动）→ AI 检测到新周 → 自动保存最小快照 → 询问开周计划
 ```
 
 ---
