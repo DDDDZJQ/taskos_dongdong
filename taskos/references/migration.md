@@ -128,4 +128,68 @@
 > 所有验证通过。
 
 ### 已是最新版本
-> 当前数据 schema 已是 1.1.0，与 skill 版本一致，无需迁移。
+> 当前数据 schema 已是 1.2.0，与 skill 版本一致，无需迁移。
+
+---
+
+### v1.2.0（从 v1.1.0 升级）
+
+#### 新增
+
+- INDEX.md 新增 `proactive: {nudge: on, strategy: on}` 字段
+- INDEX.md 新增 `## Strategy Projects` 段（初始为空表格）
+- INDEX.md 新增 `## Nudge 冷却` 段（初始为空）
+- 新建 `$TASKOS_ROOT/profile.md`（空模板，completeness: 0）
+- journal 新增 `[nudge]` 和 `[strategy]` 标记
+- project 支持 `type: strategy`（不受 deadline 90 天约束，不占 core 槽位）
+
+#### 一次性迁移动作
+
+```
+1. 在 INDEX.md 元数据区 `data_schema` 行后添加：
+   proactive:
+     nudge: on
+     strategy: on
+
+2. 在 INDEX.md "## Tasks Pool 概览" 段前添加：
+   ## Strategy Projects
+   （空）
+
+3. 在 INDEX.md 末尾（"已完成本周"段之后）添加：
+   ## Nudge 冷却
+   （空）
+
+4. 创建 `$TASKOS_ROOT/profile.md`，内容为空模板：
+   ---
+   type: user_profile
+   created: <今天>
+   last_updated: <今天>
+   completeness: 0
+   ---
+   # 用户画像
+   （各段落为空，等待"认识你"对话填充）
+
+5. 更新 INDEX.md: `data_schema: 1.2.0`
+```
+
+#### 行为变更（迁移后自动生效）
+
+- 启动行为新增 4 步：profile 读取 + nudge 扫描 + strategy 检视提醒 + profile 冷启动检测
+- 启动询问优先级规则生效（避免同时轰炸用户）
+- 周计划新增 nudge 段 + strategy 关联检查
+- 周复盘新增 nudge 段 + strategy 关联检查
+- 复盘末尾可触发 strategy 检视提醒
+- 全面核查从 10 项增至 13 项
+- 强制规则新增第 6 条（AI 建议不得自动写入）
+
+#### 验证清单
+
+| 检查项 | 预期 |
+|--------|------|
+| INDEX.data_schema | == "1.2.0" |
+| INDEX 含 proactive 字段 | nudge: on, strategy: on |
+| INDEX 含 Strategy Projects 段 | 存在（可为空） |
+| INDEX 含 Nudge 冷却段 | 存在（可为空） |
+| profile.md | 文件存在，frontmatter 含 type: user_profile |
+
+全部通过 → 向用户确认"迁移完成"。
