@@ -10,7 +10,7 @@
 
 ---
 
-## 二、执行流程（7 步）
+## 二、执行流程（5 步）
 
 ### 步骤 1：扫描统计
 
@@ -30,9 +30,7 @@ TaskOS 文件统计：
 ├── tasks/done-2026-03.md       (38 行)
 ├── tasks/done-2026-04.md       (55 行)
 ├── tasks/done-2026-05.md       (12 行)
-├── reviews/                    (12 个 review 文件 + _align-log.md)
-├── reviews/_align-log.md       (85 行)
-└── reviews/distill/            (4 个文件)
+└── reviews/                    (12 个快照文件)
 ```
 
 ### 步骤 2：journal 归档检查
@@ -47,28 +45,16 @@ TaskOS 文件统计：
 - 压缩方式：
   - 保留统计摘要（总完成数、各 project 完成数、各 context 分布）
   - 明细 JSONL 行移入 `tasks/archive/done-YYYY-MM.md`
-  - 原位置保留摘要文件（标题 + 元数据 + 统计）
-- **例外**：如果该月 done 文件中的数据仍被月度蒸馏引用（最近 3 个月），暂不归档
+  - 原位置保留摘要文件（标题 + 统计）
+- **例外**：如果该月 done 文件的数据仍在最近 3 个月的复盘范围内，暂不归档
 
 ### 步骤 4：review 文件归档检查
 
-- 超过 12 周的 review 文件 → 确认移入 `reviews/archive/`
-- 操作：`mv reviews/2026-W05-review.md reviews/archive/`
+- 超过 12 周的 review/快照文件 → 确认移入 `reviews/archive/`
+- 操作：`mv reviews/2026-W05.md reviews/archive/`
 - **不删除**，只移动
 
-### 步骤 5：_align-log.md 瘦身
-
-- 超过 100 条记录 → 旧条目归档
-- 操作：当年以前的条目移入 `reviews/_align-log-YYYY.md`
-- 当年内容保留在 `_align-log.md`
-
-### 步骤 6：INDEX 冗余检查
-
-- 检查 INDEX 是否有已归档 project 仍在列表中
-- 检查"上次月度蒸馏"字段格式是否规范
-- 如有冗余 → 列入瘦身建议
-
-### 步骤 7：输出瘦身报告
+### 步骤 5：输出瘦身报告
 
 ---
 
@@ -88,16 +74,10 @@ TaskOS 文件统计：
    - 执行？ [是/否/选择性归档]
 
 3. review 归档（节省 5 个文件）
-   - W05 ~ W09 的 review 已超过 12 周 → 移到 reviews/archive/
+   - W05 ~ W09 的快照已超过 12 周 → 移到 reviews/archive/
    - 执行？ [是/否]
 
-4. _align-log 瘦身（节省约 40 行）
-   - 当前 85 条，2025 年的 40 条可归档
-   - 执行？ [是/否]
-
-5. INDEX 无冗余 ✅
-
-总计可节省：约 335 行活跃空间 + 5 个文件位移
+总计可节省：约 295 行活跃空间 + 5 个文件位移
 ```
 
 ---
@@ -108,8 +88,8 @@ TaskOS 文件统计：
 2. **只动机器生成的文档**：不动用户手写内容（area.md / project.md 正文部分）
 3. **归档而非删除**：旧内容移入 archive/ 子目录，不彻底删除
 4. **走 journal**：实际执行文件变更时走 journal（在用户确认后）
-5. **不影响数据完整性**：归档后的文件仍可被月度蒸馏和长期趋势查询读取
-6. **tasks/archive/ 目录**：用于存放被压缩的老 done 文件（v1.0 新增目录）
+5. **不影响数据完整性**：归档后的文件仍可被复盘工作流读取（retrospect 会扫描 archive/）
+6. **tasks/archive/ 目录**：用于存放被压缩的老 done 文件
 
 ---
 
@@ -131,7 +111,7 @@ TaskOS 文件统计：
 >
 > 1. **journal 较长**（230 行）：建议把 1-4 月内容按月归档
 > 2. **3 个 done 文件超龄**（2026-01~03）：建议移到 tasks/archive/
-> 3. **5 个 review 文件超期**（W05~W09）：建议移到 reviews/archive/
+> 3. **5 个快照文件超期**（W05~W09）：建议移到 reviews/archive/
 >
 > 要执行哪些？可以全部执行，也可以逐条确认。
 
@@ -139,13 +119,12 @@ TaskOS 文件统计：
 > 正在执行瘦身操作（已走 journal）...
 > - ✅ journal 已按月归档
 > - ✅ 3 个 done 文件已移入 archive
-> - ✅ 5 个 review 文件已移入 archive
+> - ✅ 5 个快照文件已移入 archive
 >
-> 瘦身完成，节省约 335 行活跃空间。INDEX 已同步更新。
+> 瘦身完成，节省约 295 行活跃空间。INDEX 已同步更新。
 
 ### 无需瘦身
 > 扫描完毕，当前数据量健康，暂无需瘦身。
 > - journal: 45 行
 > - 所有 done 文件都在 6 个月内
-> - review 文件都在 12 周内
-> - _align-log: 32 条
+> - 快照文件都在 12 周内
