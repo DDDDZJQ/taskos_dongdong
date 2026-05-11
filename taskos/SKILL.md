@@ -3,7 +3,7 @@ name: taskos
 description: "通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
-version: 1.0.0
+version: 1.1.0
 license: MIT
 metadata:
   category: productivity
@@ -60,17 +60,19 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
    不允许基于"上次对话里的记忆"或 token 缓存回答。
    即便用户连续问 10 个相关问题，也要每次都重新读 INDEX。
 
-2. 任何写操作（即便只动 1 个文件）都必须 append .journal.md 的 [in_progress] 行；
-   操作完成后必须 append [done] 行。
+2. 任何写操作都必须写 .journal.md（单行格式）。
+   多步操作用 [in_progress] 开头，完成后写同 op 编号的 [done]。
+   单步操作直接写 [done]。
+   格式：[时间] #op编号 标记 | 操作描述
 
-3. 每次写操作后必须刷新 INDEX 的 last_updated、version，
-   并重算被改动的 active.md / done-*.md 顶部元数据（last_updated/total/by_project_count）。
+3. 每次写操作后必须刷新 INDEX 的 last_updated、version。
+   如果操作改变了 due_week / tier / 任务完成状态，重新生成当周快照段。
 
 4. 启动时如检测到 .journal.md 末尾有未配对 [in_progress]，
    必须主动告知用户并询问处理方式（A 继续 / B 回滚 / C 标记已完成）。
 
 5. 启动时比对 INDEX.current_week 与今天的 ISO 周（用日期计算，不能字符串递增）；
-   不一致时主动询问用户"要不要现在开周计划？"；
+   不一致时先自动保存上周最小快照（reviews/YYYY-Www.md），再询问用户"要不要现在开周计划？"；
    若用户拒绝，AI 自动更新 INDEX.current_week 为今天 ISO 周并重生成当前周段（走 journal）。
 ```
 
@@ -82,6 +84,8 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 - 任务、项目、本周计划、周复盘、领域规划、改名
 - "记一下…" / "加任务" / "我现在要做什么" / "还有什么没做" / "把 X 归到 Y"
 - "全面核查" / "系统检查" / "数据体检" / "数据瘦身" / "清理文档" / "收拾收拾"
+- "回顾" / "看看趋势" / "看看历史" / "我最近怎么样"
+- "执行迁移" / "升级数据" / "数据迁移"
 
 ---
 
@@ -105,17 +109,14 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
    - 有 → 告知用户处理方式（详见强制规则 #4）
 
 5. 比对 `INDEX.current_week` 与今天的 ISO 周（用日期计算）
-   - 不一致 → 主动询问"要不要现在开周计划？"
+   - 不一致 → **先自动保存上周最小快照**（详见"自动最小快照"段）→ 再主动询问"要不要现在开周计划？"
    - 用户同意 → 进入 weekly plan 工作流
-   - 用户拒绝 → AI 自动只更新 INDEX.current_week 为今天 ISO 周，重生成当前周段（基于 active.md 中 due_week == 新 current_week 的任务，走 journal）
+   - 用户拒绝 → AI 自动只更新 INDEX.current_week 为今天 ISO 周，重生成当前周段（走 journal）
 
-6. 检查月度蒸馏是否过期（INDEX 中"上次月度蒸馏"早于本月）
-   - 过期 → 自动跑 distill 工作流
-
-7. 检查 `.journal.md` 是否需要月度归档
+6. 检查 `.journal.md` 是否需要月度归档
    - 最早记录早于本月 → 切到 `.journal-YYYY-MM.md`，当月留在 `.journal.md`
 
-8. 懒人模式检测
+7. 懒人模式检测
    - 计算今天 - INDEX.last_weekly_plan
    - > 7 天 → 标记下次 weekly plan 走对齐流程（详见 workflow-weekly.md）
 
@@ -127,11 +128,12 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 |---|---|
 | 记一下 / 加任务 / 帮我归类 / 把 X 归到 Y | references/workflow-capture.md |
 | 开周计划 / 这周要做什么 / 排一下本周 | references/workflow-weekly.md（plan 部分） |
-| 周复盘 / 本周怎么样 / 复盘一下 | references/workflow-weekly.md（review 部分） |
+| 周复盘 / 本周怎么样 | references/workflow-weekly.md（review 部分） |
 | 把 X 改名为 Y / 重命名 X | references/workflow-rename.md |
 | 全面核查 / 系统检查 / 数据体检 / 健康检查 | references/workflow-healthcheck.md |
 | 数据瘦身 / 清理文档 / 文档体检 / 收拾收拾 | references/workflow-cleanup.md |
-| （月度蒸馏过期） | references/workflow-distill.md（启动行为自动触发） |
+| 回顾 / 看看趋势 / 看看历史 / 我最近怎么样 / 复盘一下最近 | references/workflow-retrospect.md |
+| 执行迁移 / 升级数据 / 数据迁移 | references/migration.md |
 
 ---
 
@@ -158,10 +160,10 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 
 | 本次操作 | 检查 |
 |---|---|
-| Capture 一条 task 到 active.md | id 全局唯一（active + 当 captured 月 done + inbox）；引用的 project 是否存在；动词前置改写完成；active.md 顶部 total/by_project_count 重算；INDEX 刷新 |
+| Capture 一条 task 到 active.md | id 全局唯一（active + 当 captured 月 done + inbox）；引用的 project 是否存在；动词前置改写完成；INDEX 刷新 |
 | Capture 一条 task 到 inbox.md | id 全局唯一；动词前置改写完成；captured 日期已填；INDEX 刷新 |
 | Inbox 整理（移到 active） | inbox.md 该行已删；active.md 已 append 且 ID 保留；缺失字段已补全（projects/area/carry=0/due_week=null/tier=null）；INDEX 刷新 |
-| 完成一条 task | active.md 该行已删；done-YYYY-MM.md 已 append 全字段（含 null）+ completed + outcome:done + week；active.md 顶部元数据重算；INDEX 当前周"已完成本周"同步；INDEX version+1 |
+| 完成一条 task | active.md 该行已删；done-YYYY-MM.md 已 append 全字段（含 null）+ completed + outcome:done + week；INDEX 当前周"已完成本周"同步；INDEX version+1 |
 | 放弃一条 task | active.md 该行已删；done-YYYY-MM.md 已 append 全字段 + completed（今天）+ outcome:dropped；INDEX 同步 |
 | 修改 done 任务的 completed 日期 | 若新旧日期跨月 → 跨文件迁移（旧 done-*.md 删行，新 done-*.md append）；若 week 字段也变 → INDEX 当前周"已完成本周"重算；INDEX 同步 |
 | 修改 done 任务的 outcome 字段 | done-*.md 整行替换；若涉及 INDEX 当前周显示 → 重生成；INDEX 同步 |
@@ -169,10 +171,27 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 | 改 project status | INDEX 更新；archive 触发条件检查 |
 | 改 priority 为 core | core 总数是否超 3（超出立即告警） |
 | 改 progress | risk 是否需重算 |
-| Rename | 全局检查旧名是否还有残留（除 done-*.md 外）；INDEX 同步；_align-log 是否记一笔；priority/status/area 等其他字段未被误改 |
-| current_week 修正（启动行为自动） | 用户拒绝开 plan 时由 AI 自动修正；走 journal；当前周快照重生成 |
+| Rename | 全局检查旧名是否还有残留（除 done-*.md 外）；INDEX 同步；journal 记一笔 [align]；priority/status/area 等其他字段未被误改 |
+| current_week 修正（启动行为自动） | 先保存上周最小快照；走 journal；当前周快照重生成 |
 
 不一致 → 立即提示用户 + 给修复建议（不擅自修复）。
+
+---
+
+# 自动最小快照
+
+**触发条件**：启动行为步骤 5 中，检测到 `current_week` 需要切换时。
+
+**动作**：
+1. 读 active 所有项目的 progress/risk
+2. 从 done-*.md 统计上周的完成/放弃数
+3. 从 active.md 统计上下文分布、carry 积压
+4. 写入 `reviews/YYYY-Www.md`（上周的周编号）
+5. 走 journal（单行格式：`[时间] #NNN done | auto-snapshot YYYY-Www`）
+
+**跳过条件**：如果该周的快照文件已存在（用户做过正式 review），不覆盖。
+
+**作用**：保证时间线上每周都有结构化快照，复盘时不会有数据断层。
 
 ---
 
@@ -198,8 +217,8 @@ TASKOS_ROOT: C:\Users\jqdzhang\TaskOS
 | 文件 | 角色 |
 |---|---|
 | `tasks/inbox.md` | 未分类捕获区（脑暴草稿，markdown checklist 格式） |
-| `tasks/active.md` | 已分类未完成的中央池，**永续**（JSONL 格式） |
-| `tasks/done-YYYY-MM.md` | 已完成 / 放弃归档（JSONL，按 completed 月份直接写入） |
+| `tasks/active.md` | 已分类未完成的中央池，**永续**（标题 + JSONL 区块） |
+| `tasks/done-YYYY-MM.md` | 已完成 / 放弃归档（标题 + JSONL 区块，按 completed 月份直接写入） |
 
 ---
 
@@ -234,9 +253,10 @@ key_milestones（可选）触发：
 - `references/workflow-capture.md` — 捕获分层 + inbox 整理详细 SOP
 - `references/workflow-weekly.md` — 周计划 + 周复盘 + 风险模型 + 完整性扫描
 - `references/workflow-rename.md` — 重命名工作流 + 旧名历史保留
-- `references/workflow-distill.md` — 月度自动蒸馏（含 area 活跃度 / yearly_intent 进度 / 精力分布统计）
-- `references/workflow-healthcheck.md` — 全面核查一键指令（11 项检查清单）
-- `references/workflow-cleanup.md` — 数据瘦身一键指令（7 步流程）
+- `references/workflow-retrospect.md` — 手动复盘（从周快照实时生成趋势分析）
+- `references/workflow-healthcheck.md` — 全面核查一键指令（10 项检查清单）
+- `references/workflow-cleanup.md` — 数据瘦身一键指令（5 步流程）
+- `references/migration.md` — Skill 更新迁移指引
 
 模板在 `templates/`：
 - `templates/area.md` — area 文件模板
@@ -269,8 +289,8 @@ key_milestones（可选）触发：
 > 检测到 TaskOS 数据目录还不存在（${TASKOS_ROOT}）。要不要现在初始化？
 >
 > 这会创建：
-> - 目录结构：areas/、projects/active/、projects/archive/、tasks/、reviews/、reviews/distill/
-> - 空文件：INDEX.md、tasks/inbox.md、tasks/active.md、.journal.md、reviews/_align-log.md、README.md
+> - 目录结构：areas/、projects/active/、projects/archive/、tasks/、tasks/archive/、reviews/、reviews/archive/
+> - 空文件：INDEX.md、tasks/inbox.md、tasks/active.md、.journal.md、README.md
 > - **不预填任何 area / project**——你可以之后用 capture 工作流逐步建立
 >
 > 初始化吗？
@@ -288,11 +308,10 @@ ${TASKOS_ROOT}/
 │   └── archive/             # 空目录
 ├── tasks/
 │   ├── inbox.md             # 仅含标题"# Inbox"
-│   ├── active.md            # 含完整 markdown 头 + 空 JSONL 区块
-│   └── archive/             # v1.0 新增：数据瘦身时老 done 文件的归档目标
+│   ├── active.md            # 标题 + 空 JSONL 区块
+│   └── archive/             # 数据瘦身时老 done 文件的归档目标
 └── reviews/
-    ├── _align-log.md        # 仅含标题"# Align Log"
-    └── distill/             # 空目录
+    └── archive/             # 12 周以上旧快照的归档目标
 ```
 
 初始化的 INDEX.md 模板：
@@ -305,6 +324,7 @@ version: 1
 current_week: <今天的 ISO 周>
 energy_this_week: null
 weekly_est_limit: 12h
+data_schema: 1.1.0
 
 ## Areas (active: 0)
 （空）
@@ -335,18 +355,11 @@ range: <周一> ~ <周日>
 ### 可以做（could, ≤5）
 
 ### 已完成本周
-
-## 上次月度蒸馏
-- last_distill: null    # 首次启动后会自动跑上月的 distill 工作流
 ```
 
 初始化 active.md 模板：
 ```markdown
 # Active Tasks
-last_updated: <今天>
-total: 0
-by_project_count: {}
-
 ## ~~~ JSONL 区块开始 ~~~
 ## ~~~ JSONL 区块结束 ~~~
 ```
@@ -363,10 +376,10 @@ by_project_count: {}
 
 # 版本与维护
 
-- 当前版本：v1.0.0（基于 v0.9.4 + 7 项用户体验优化：AI 人格基调 / 复盘先看成就 / 长期历史趋势 / 精力管理 / 工作量监控 / 全面核查 / 数据瘦身）
+- 当前版本：v1.1.0（基于 v1.0.0 + 3 项结构性优化：精简历史记录 / 复盘能力增强 / Skill 更新指引）
 - 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植
 - 已通过多轮严格审核，零 P0 / P1 漏洞
 
 如果在使用过程中发现实战问题，请：
-1. 在 `_align-log.md` 留一笔反馈
-2. 修订 reference 文件并升 minor 版本号（v1.0.0 → v1.0.1）
+1. 在 `.journal.md` 写一条 `[align]` 记录
+2. 修订 reference 文件并升 patch 版本号（v1.1.0 → v1.1.1）
