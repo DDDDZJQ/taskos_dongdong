@@ -56,6 +56,7 @@ status: active                         # active | paused | done | dropped
 milestone: "完成精读 + 输出 5000 字综述"  # 必填，一句话描述里程碑
 progress: 0.42                         # 0-1，用户主观给
 risk: 🟢                               # 🟢 | 🟡 | 🔴，由 weekly 自动写入
+justification: "简述为什么这个项目值得被 TaskOS 管理"  # v1.2.2 新增，通过 Gatekeeper 后写入
 
 # 可选：关键里程碑（防温水煮青蛙）
 key_milestones:
@@ -356,6 +357,10 @@ range: 2026-05-04 ~ 2026-05-10
 | `decision` | 关键决策记录 | 复盘时可追溯"为什么" |
 | `nudge` | AI 主动建议记录 | 建议内容 + 用户响应（采纳/忽略/拒绝） |
 | `strategy` | Strategy 工作流操作 | 路线图创建/检视/调整/资源研究 |
+| `gatekeeper` | 项目门禁判断记录 | 项目准入/拒绝 + 理由（v1.2.2） |
+| `gatekeeper-override` | 用户强制覆盖门禁 | 用户坚持写入被拒项目（v1.2.2） |
+| `nudge-韧性-拒绝` | 韧性检测被拒绝 | 冷却 2 周内不再提醒（v1.2.3） |
+| `nudge-留白` | 探索空间提醒已发出 | 冷却 4 周内不再提醒（v1.2.3） |
 
 ### 崩溃恢复规则
 
@@ -423,7 +428,7 @@ gap               = actual_progress - expected_progress
 - 错误提示 / 用户对话模板
 
 ### 必须英文（机器可读性）
-- YAML 键名：`type`, `name`, `area`, `priority`, `deadline`, `status`, `progress`, `risk`, `key_milestones`, `yearly_intent`, `rituals`, `identity`, `created`, `milestone`, `desc`, `freq`, `energy_this_week`, `weekly_est_limit`, `energy`, `data_schema`
+- YAML 键名：`type`, `name`, `area`, `priority`, `deadline`, `status`, `progress`, `risk`, `key_milestones`, `yearly_intent`, `rituals`, `identity`, `created`, `milestone`, `desc`, `freq`, `energy_this_week`, `weekly_est_limit`, `energy`, `data_schema`, `justification`
 - YAML 枚举值：`active / dormant / retired`、`core / normal / side`、`active / paused / done / dropped`、`pending / done`、`weekly / monthly`、`high / normal / low`（energy）
 - JSONL 字段名：`id / title / projects / area / context / est / carry / due_week / tier / captured / completed / outcome / week / ritual_source / ritual_desc / freq`
 - JSONL 字段枚举值：`must / should / could`（tier）、`done / dropped`（outcome）、`weekly / monthly`（freq）
