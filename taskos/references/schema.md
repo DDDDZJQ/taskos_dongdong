@@ -158,6 +158,8 @@ strategy_phase: 1
 | `ritual_desc` | string | 否 | 仪式型任务的原始 desc 文本（用于身份认证） |
 | `freq` | string | 否 | 仪式型频率（"weekly" / "monthly"），仅 ritual 任务有 |
 | `captured` | string | ✅ | 捕获日期（YYYY-MM-DD） |
+| `status` | string | 否 | `"not_started"` / `"in_progress"` / `"blocked"`；默认 not_started；旧行无此字段视为 not_started |
+| `note` | string \| null | 否 | 自由文本进度细节（如 "110/200"）；每次更新覆盖旧值；旧行无此字段视为 null |
 
 ### 4.3 done-YYYY-MM.md 额外字段
 
@@ -265,25 +267,10 @@ proactive:                             # v1.2 新增：主动规划开关
 ## Tasks Pool 概览
 - inbox: 7 条（最久 8 天）
 - active 总数: 47
+- 本周排期: 10 条（must: 3, should: 5, could: 2）
 - 高 carry 任务（≥3）: 2 条 ⚠️
 - 滞留任务（due_week < current_week 且未完成）: 5 条 ⚠️
 - by_project: 精读《...》12 / 播客 8 / _orphan 3 / _ritual 4
-
-## 当前周 2026-W19（生成于 2026-05-10）
-range: 2026-05-04 ~ 2026-05-10
-
-### 必须做（must, ≤3）
-- [ ] t-20260510-001 精读第 3 章 → 精读《...》
-
-### 该做（should, ≤7）
-- [ ] r-2026-W19-001 本周精读 1 篇外刊（仪式型 / 心理学）
-
-### 可以做（could, ≤5）
-
-### 已完成本周
-（来源：done-YYYY-MM.md 中筛选 week == current_week 且 outcome == "done"；
-若 current_week 的日期范围跨两个月份（仅 W01 跨年时发生），需同时读两个月份的 done 文件）
-- [x] t-20260509-005 写文章大纲（2026-05-09）
 
 ## Nudge 冷却（v1.2 新增）
 - core_stall_「项目名」: 2026-W21
@@ -292,10 +279,10 @@ range: 2026-05-04 ~ 2026-05-10
 
 ### INDEX 写入规则
 
-- 每个写操作（capture / weekly plan / weekly review / rename / archive / 状态变更 / 完成 / 放弃）结束时**必须**：
+- 每个写操作（capture / weekly plan / weekly review / rename / archive / 状态变更 / 完成 / 放弃 / progress-update）结束时**必须**：
   - 刷新 `last_updated`
   - `version += 1`
-  - 如果改变了 due_week / tier / 任务完成状态 → 重新生成"当前周"段
+  - 如果改变了 due_week / tier / 任务完成状态 / active 总数 → 刷新 Tasks Pool 概览计数
 - weekly plan 结束时刷新 `last_weekly_plan`
 - weekly plan 时刷新 `energy_this_week`（用户回答精力状态后写入：high / normal / low）
 - weekly review 结束时刷新 `last_full_rebuild` 并完整重建 INDEX
@@ -326,7 +313,7 @@ range: 2026-05-04 ~ 2026-05-10
 - 周复盘时：当周快照写入 review 文件**永久存档**，**不立即切换 current_week**
 - 启动行为时：比对 INDEX.current_week 与今天 ISO 周；不一致 → 先自动保存上周最小快照，再主动询问用户"要不要现在开周计划？"
   - 用户同意 → 进入 weekly plan 工作流
-  - 用户拒绝 → AI 自动**只更新 INDEX.current_week 为今天 ISO 周**，并重新生成"当前周"段（基于 active.md 中 due_week == 新 current_week 的任务；可能为空），整个修正走 journal
+  - 用户拒绝 → AI 自动**只更新 INDEX.current_week 为今天 ISO 周**，刷新 Tasks Pool 概览计数，整个修正走 journal
 
 ---
 
