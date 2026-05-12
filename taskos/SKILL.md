@@ -3,7 +3,7 @@ name: taskos
 description: "通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
-version: 1.2.3
+version: 1.2.4
 license: MIT
 metadata:
   category: productivity
@@ -75,14 +75,14 @@ TASKOS_ROOT: ~/TaskOS
    格式：[时间] #op编号 标记 | 操作描述
 
 3. 每次写操作后必须刷新 INDEX 的 last_updated、version。
-   如果操作改变了 due_week / tier / 任务完成状态，重新生成当周快照段。
+   如果操作改变了 due_week / tier / 任务完成状态 / active 总数，刷新 Tasks Pool 概览计数。
 
 4. 启动时如检测到 .journal.md 末尾有未配对 [in_progress]，
    必须主动告知用户并询问处理方式（A 继续 / B 回滚 / C 标记已完成）。
 
 5. 启动时比对 INDEX.current_week 与今天的 ISO 周（用日期计算，不能字符串递增）；
    不一致时先自动保存上周最小快照（reviews/YYYY-Www.md），再询问用户"要不要现在开周计划？"；
-   若用户拒绝，AI 自动更新 INDEX.current_week 为今天 ISO 周并重生成当前周段（走 journal）。
+   若用户拒绝，AI 自动更新 INDEX.current_week 为今天 ISO 周，刷新 Tasks Pool 概览计数（走 journal）。
 
 6. AI 的所有 nudge 和 strategy 建议仅是建议，不得自动写入 active.md 或修改 project 文件。
    必须获得用户明确确认后才能执行对应写操作。
@@ -92,6 +92,14 @@ TASKOS_ROOT: ~/TaskOS
    AI 必须独立评估准入条件，理由不充分时有权且有责任拒绝。
    AI 不得因用户情绪或反复要求而降低准入标准。
    用户可最终 override（明确说"我坚持"），但必须 journal 标记 [gatekeeper-override]。
+
+8. 用户报告任何任务的进度时（包括口头提及"做了 XX""完成了一部分""背了多少"），
+   AI 必须立即更新 active.md 对应行：
+   - status 改为 "in_progress"（如果还是 not_started）
+   - note 字段写入用户提供的具体细节
+   如果用户说"XX 被卡住了/在等 YY"，status 改为 "blocked"，note 写原因。
+   操作后走 journal 和 Mini-Check。
+   格式：[时间] #NNN done | progress-update「任务标题」status→in_progress, note: xxx
 ```
 
 ---
@@ -106,6 +114,7 @@ TASKOS_ROOT: ~/TaskOS
 - "执行迁移" / "升级数据" / "数据迁移"
 - "帮我规划" / "制定计划" / "路线图" / "长期目标" / "更新路线图" / "检视进度" / "搜索资源"
 - "认识我" / "更新画像" / "我的画像"
+- "做了 XX" / "完成了 XX" / "XX 进展" / "XX 卡住了" / "报告进度"
 
 ---
 
@@ -131,7 +140,7 @@ TASKOS_ROOT: ~/TaskOS
 5. 比对 `INDEX.current_week` 与今天的 ISO 周（用日期计算）
    - 不一致 → **先自动保存上周最小快照**（详见"自动最小快照"段）→ 再主动询问"要不要现在开周计划？"
    - 用户同意 → 进入 weekly plan 工作流
-   - 用户拒绝 → AI 自动只更新 INDEX.current_week 为今天 ISO 周，重生成当前周段（走 journal）
+   - 用户拒绝 → AI 自动只更新 INDEX.current_week 为今天 ISO 周，刷新 Tasks Pool 概览计数（走 journal）
 
 6. 检查 `.journal.md` 是否需要月度归档
    - 最早记录早于本月 → 切到 `.journal-YYYY-MM.md`，当月留在 `.journal.md`
@@ -148,7 +157,7 @@ TASKOS_ROOT: ~/TaskOS
      a. core 项目停滞：连续 2 周 progress 未变（对比最近 2 个周快照；快照 < 2 个时跳过）
      b. carry ≥ 3 堆积：active.md 中 carry >= 3 的任务
      c. 上下文分布失衡：单一 context 占比 > 60%
-     d. 任务池空档：active.md 中 due_week == 本周的任务 < 3 条
+     d. 任务池空档：active.md 中 due_week == 本周 且 status != "blocked" 的任务 < 3 条
    - active.md 为空 → 跳过全部 nudge
    - 输出建议（朋友式语气，一句话）；用户响应后走 journal [nudge]
 
@@ -261,16 +270,24 @@ d. 用户最终 override（说"我坚持"）→ 写入但 journal 标记 [gateke
 
 # 高频查询专用入口（只读路径）
 
-触发：我现在要做什么 / 现在做啥 / 还有什么没做 / X 项目进展怎样 / 这周还剩什么 / 拖了多久没做的
+触发：我现在要做什么 / 现在做啥 / 还有什么没做 / 进展如何 / 做到哪了 / 这周做了什么 / X 项目进展怎样 / 这周还剩什么 / 拖了多久没做的
 
 **SOP（极简，只读不写）**：
 
 1. 强制读 INDEX.md（执行强制规则 #1）
 2. 答案路径：
-   - "本周还有什么没做" → 读 INDEX 当前周快照段（已聚合）
-   - "拖了多久没做的" → 读 active.md，列出 `(carry ≥ 1) ∪ (滞留任务)` 按 ID 去重
-   - "X 项目进展" → 读对应 project 文件 + active.md 中 projects 数组含 X 的任务 + 当月及上月 done-YYYY-MM.md 中含 X 的任务（完整呈现"已做 N 条 + 未做 M 条"）
-   - "我现在要做什么" → INDEX 当前周快照"必须做"档
+   - "我现在要做什么" → 读 active.md，过滤 due_week == current_week && tier == "must"
+   - "本周还有什么没做" → 读 active.md，过滤 due_week == current_week，按 status 分组呈现
+   - "我现在状况" / "进展如何" / "做到哪了" / "这周做了什么" →
+     读 active.md（due_week == current_week）按 status 分组 +
+     读 done-*.md（week == current_week && outcome == done）统计已完成数
+     呈现格式：
+     【进行中】「任务名」— note 内容
+     【未开始】「任务名」
+     【阻塞】「任务名」— note 内容
+     本周已完成 N 条
+   - "拖了多久没做的" → 读 active.md，列出 carry ≥ 1 或 滞留任务
+   - "X 项目进展" → 读 project 文件 + active.md 中 projects 含 X 的任务 + 当月及上月 done-YYYY-MM.md 中含 X 的任务（完整呈现"已做 N 条 + 未做 M 条"）
 3. **不写任何文件**，不更新 journal，不更新 INDEX
 4. 直接回答
 
@@ -282,19 +299,20 @@ d. 用户最终 override（说"我坚持"）→ 写入但 journal 标记 [gateke
 
 | 本次操作 | 检查 |
 |---|---|
-| Capture 一条 task 到 active.md | id 全局唯一（active + 当 captured 月 done + inbox）；引用的 project 是否存在；动词前置改写完成；INDEX 刷新 |
+| Capture 一条 task 到 active.md | id 全局唯一（active + 当 captured 月 done + inbox）；引用的 project 是否存在；动词前置改写完成；INDEX Tasks Pool 计数刷新 |
 | Capture 一条 task 到 inbox.md | id 全局唯一；动词前置改写完成；captured 日期已填；INDEX 刷新 |
-| Inbox 整理（移到 active） | inbox.md 该行已删；active.md 已 append 且 ID 保留；缺失字段已补全（projects/area/carry=0/due_week=null/tier=null）；INDEX 刷新 |
-| 完成一条 task | active.md 该行已删；done-YYYY-MM.md 已 append 全字段（含 null）+ completed + outcome:done + week；INDEX 当前周"已完成本周"同步；INDEX version+1 |
-| 放弃一条 task | active.md 该行已删；done-YYYY-MM.md 已 append 全字段 + completed（今天）+ outcome:dropped；INDEX 同步 |
-| 修改 done 任务的 completed 日期 | 若新旧日期跨月 → 跨文件迁移（旧 done-*.md 删行，新 done-*.md append）；若 week 字段也变 → INDEX 当前周"已完成本周"重算；INDEX 同步 |
-| 修改 done 任务的 outcome 字段 | done-*.md 整行替换；若涉及 INDEX 当前周显示 → 重生成；INDEX 同步 |
-| 改 task 的 due_week / tier | active.md 整行替换；INDEX 当前周快照重生成 |
+| Inbox 整理（移到 active） | inbox.md 该行已删；active.md 已 append 且 ID 保留；缺失字段已补全（projects/area/carry=0/due_week=null/tier=null/status="not_started"/note=null）；INDEX Tasks Pool 计数刷新 |
+| 完成一条 task | active.md 该行已删；done-YYYY-MM.md 已 append 全字段（含 status/note/null）+ completed + outcome:done + week；INDEX Tasks Pool 计数刷新 |
+| 放弃一条 task | active.md 该行已删；done-YYYY-MM.md 已 append 全字段 + completed（今天）+ outcome:dropped；INDEX Tasks Pool 计数刷新 |
+| 修改 done 任务的 completed 日期 | 若新旧日期跨月 → 跨文件迁移（旧 done-*.md 删行，新 done-*.md append）；INDEX 同步 |
+| 修改 done 任务的 outcome 字段 | done-*.md 整行替换；INDEX 同步 |
+| 改 task 的 due_week / tier | active.md 整行替换；INDEX Tasks Pool 计数刷新 |
+| progress-update | active.md 对应行已替换；status 值合法（not_started/in_progress/blocked）；note 为字符串或 null；journal 已记录；INDEX last_updated + version 已刷新 |
 | 改 project status | INDEX 更新；archive 触发条件检查 |
 | 改 priority 为 core | core 总数是否超 3（超出立即告警） |
 | 改 progress | risk 是否需重算 |
 | Rename | 全局检查旧名是否还有残留（除 done-*.md 外）；INDEX 同步；journal 记一笔 [align]；priority/status/area 等其他字段未被误改 |
-| current_week 修正（启动行为自动） | 先保存上周最小快照；走 journal；当前周快照重生成 |
+| current_week 修正（启动行为自动） | 先保存上周最小快照；走 journal；INDEX Tasks Pool 计数刷新 |
 | 创建 strategy project | type: strategy 有 milestones 段；INDEX 同步（Strategy Projects 段）；journal [strategy] |
 | 创建子 project（有 parent_strategy） | parent_strategy 指向的 strategy project 存在且 active；INDEX 同步 |
 | Strategy 检视 | last_reviewed 已更新；进度检视记录已追加；journal [strategy] |
@@ -481,20 +499,10 @@ proactive:
 ## Tasks Pool 概览
 - inbox: 0 条
 - active 总数: 0
+- 本周排期: 0 条（must: 0, should: 0, could: 0）
 - 高 carry 任务（≥3）: 0 条
 - 滞留任务: 0 条
 - by_project: 空
-
-## 当前周 <ISO 周>（生成于 <今天>）
-range: <周一> ~ <周日>
-
-### 必须做（must, ≤3）
-
-### 该做（should, ≤7）
-
-### 可以做（could, ≤5）
-
-### 已完成本周
 
 ## Nudge 冷却
 （空）
@@ -519,7 +527,7 @@ range: <周一> ~ <周日>
 
 # 版本与维护
 
-- 当前版本：v1.2.3（v1.2.2 + 人设增强 + 韧性/探索/模式性阈值机制）
+- 当前版本：v1.2.4（v1.2.3 + 进度追踪 + INDEX 快照段移除）
 - 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植 + 主动推动但不越权 + 严格准入
 - 已通过多轮严格审核，零 P0 / P1 漏洞
 
