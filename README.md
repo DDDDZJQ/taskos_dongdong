@@ -10,12 +10,13 @@ AI Agent 的个人技能仓库（private）。
 
 基于「领域/项目/任务」三层 SOP 的通用个人任务管理 skill。
 
-- 版本：v1.2.1
+- 版本：v1.2.2
 - 兼容：Claude Code / Cursor / OpenClaw / WorkBuddy 等支持 Anthropic 风格 skill 的 agent
 - 数据格式：纯 Markdown + JSONL，跨 AI agent 可移植
 
 ### 更新日志
 
+- **v1.2.2**（2026-05-12）：新增项目写入门禁 Gatekeeper — 创建项目前 AI 强制质询准入理由，理由不充分有权拒绝；保护内在乐趣型事物不被任务化
 - **v1.2.1**（2026-05-11）：路径通用化 + 项目偏好
   - TASKOS_ROOT 改为 `~/TaskOS`（跨平台通用，不绑定具体用户名）
   - project 模板新增 `## 偏好` 段（记录用户对项目的个人偏好，如英语偏爱美音）
