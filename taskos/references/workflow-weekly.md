@@ -108,6 +108,13 @@ AI 主动问：
 **carry ≥3 自动告警**：
 > "X 这条已结转 3 次，要不要：A 拆得更小 / B 直接删掉 / C 重新评估它真的重要吗？"
 
+**进行中任务额外显示 note**：
+滞留任务中 `status == "in_progress"` 的，列出时附带 note（让用户带着上下文决策）：
+> 「背 200 单词」（carry 1，上周进度：180/200）
+>   → [继续做本周] / [标记完成] / [推迟] / [放弃]
+
+**status/note 在"继续做本周"时保留原值，不重置**。
+
 ### 1.5 Ritual 任务自动生成
 
 #### 周频 ritual（freq: weekly）
@@ -206,13 +213,20 @@ gap               = actual_progress - expected_progress
 - 每 4 周最多提醒 1 次，冷却记录写入 INDEX.md「Nudge 冷却」段（格式：`exploration_reminder: YYYY-Www`）
 - journal 标记 [nudge-留白]
 
-### 1.9 重新生成 INDEX 当前周段
+### 1.9 刷新 INDEX Tasks Pool 概览
 
-排期完成后，AI 从 active.md 过滤 `due_week == current_week` 的任务，按 tier 分组生成 INDEX 当前周快照。同时刷新：
+排期完成后，AI 从 active.md 计算 Tasks Pool 概览各项计数并写入 INDEX。同时刷新：
 - INDEX.last_updated
 - INDEX.version += 1
 - INDEX.last_weekly_plan = 今天日期
 - INDEX.energy_this_week = 本次精力状态
+
+计数项：
+- active 总数：active.md JSONL 行数
+- 本周排期：due_week == current_week 的任务数（分 must/should/could）
+- 高 carry 任务：carry >= 3 的任务数
+- 滞留任务：due_week < current_week 且未完成的任务数
+- by_project：按 projects 字段聚合
 
 ### 1.10 Nudge 附加（v1.2 新增）
 
@@ -255,16 +269,13 @@ gap               = actual_progress - expected_progress
 - gap = actual - expected → 套等级表
 - AI **写回 risk 字段，不更新 progress**（progress 是用户主观字段）
 
-### 2.3 完整性扫描（4 项）
+### 2.3 完整性扫描（3 项）
 
 问题记到 `.journal.md`（[align] 标记）：
 
 1. active.md 中 task 的 `projects` 数组任一元素引用了不存在的 project
 2. project 引用了不存在的 area
 3. active 目录有 project 但 INDEX 未列入
-4. **当周快照一致性**（按 ID 集合比较）：
-   - 未完成段：INDEX 当周快照三档 ID 集合 == active.md 中 due_week == current_week 的 ID 集合
-   - 已完成段：INDEX 当周快照"已完成本周" ID 集合 == done-YYYY-MM.md 中 week == current_week 且 outcome == "done" 的 ID 集合
 
 > ritual_source 不参与孤儿引用检查（rituals 字段被删时已生成的 ritual 任务靠 ritual_desc 自我描述，仍有效）。
 
@@ -322,10 +333,12 @@ energy: normal
 ## 当周任务快照
 ### must
 - [x] t-20260510-001 精读第 3 章
+- [~] t-20260512-001 背 200 单词 | 180/200
 ### should
 - [x] r-2026-W19-001 精读 1 篇外刊
 - [ ] t-20260512-003 写播客大纲
 ### could
+- [!] t-20260513-004 提交周报 | blocked: 等主管确认
 - [ ] t-20260513-004 整理书架
 ```
 
@@ -337,6 +350,12 @@ energy: normal
 - `carry_out` = active.md 中 due_week == current_week 且未完成 且非 ritual
 - `est_total` = 排期任务 est 累加（无 est 按 1h）
 - `上下文分布` = 排期任务按 context 字段聚合
+
+**任务快照标记说明（v1.2.4 新增）**：
+- `[x]` = 完成（在 done-*.md 中 outcome == done）
+- `[~]` = 部分完成（status == "in_progress" 但到周末仍未完成，保留 note）
+- `[ ]` = 未开始（status == "not_started" 或无 status 字段）
+- `[!]` = 阻塞（status == "blocked"，保留 note）
 - `carry 积压` = active.md 中 carry > 0 / carry ≥ 3 的计数
 
 > **注意**：不切换 INDEX.current_week。current_week 只在下次 weekly plan 时切换（或启动行为时用户拒绝开 plan 自动修正）。
