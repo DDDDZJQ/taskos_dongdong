@@ -53,10 +53,24 @@
 ### 2.6 未排期的滞留任务（pool 状态）
 
 ```json
-{"id":"t-20260428-003","title":"整理第一章笔记","projects":["精读《动力取向心理治疗》"],"area":null,"context":"@电脑","est":"60min","carry":2,"due_week":null,"tier":null,"captured":"2026-04-28"}
+{"id":"t-20260428-003","title":"整理第一章笔记","projects":["精读《动力取向心理治疗》"],"area":null,"context":"@电脑","est":"60min","carry":2,"due_week":null,"tier":null,"status":"not_started","note":null,"captured":"2026-04-28"}
 ```
 
 > `due_week: null + tier: null` = 任务在 active.md 池中，但本周没排上。weekly plan 时由用户决定是否拉进本周。
+
+### 2.7 进行中任务（含 status + note）
+
+```json
+{"id":"t-20260512-001","title":"背 200 单词","projects":["英语学习"],"area":null,"context":"@阅读","est":"60min","carry":0,"due_week":"2026-W20","tier":"should","status":"in_progress","note":"110/200，Unit 5-6 已完成，剩 Unit 7-8","captured":"2026-05-12"}
+```
+
+> 用户报告进度后 AI 即时更新 status + note。
+
+### 2.8 阻塞任务
+
+```json
+{"id":"t-20260512-003","title":"提交周报","projects":["工作"],"area":null,"context":"@电脑","est":"30min","carry":0,"due_week":"2026-W20","tier":"must","status":"blocked","note":"等主管确认新模板","captured":"2026-05-12"}
+```
 
 ---
 
@@ -103,6 +117,8 @@ done 文件保留 active 时**全部字段（含 null）** + `completed` + `outc
 | `ritual_desc` | 仅 ritual 任务有，值 = 来源 area 中 rituals 数组的 desc 文本 |
 | `freq` | 仅 ritual 任务有，值 = `"weekly"` / `"monthly"` |
 | `captured` | YYYY-MM-DD 格式 |
+| `status` | `"not_started"` / `"in_progress"` / `"blocked"`；默认 `"not_started"`；旧数据无此字段视为 not_started |
+| `note` | 自由文本字符串（如 `"110/200"`），或 null；每次进度更新覆盖旧值 |
 | `completed` | 仅 done 文件有，YYYY-MM-DD |
 | `outcome` | 仅 done 文件有，`"done"` / `"dropped"` |
 | `week` | 仅 done 文件有，ISO 周字符串或 null（用于 INDEX 当周快照"已完成本周"过滤） |
