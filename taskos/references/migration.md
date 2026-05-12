@@ -128,7 +128,7 @@
 > 所有验证通过。
 
 ### 已是最新版本
-> 当前数据 schema 已是 1.2.3，与 skill 版本一致，无需迁移。
+> 当前数据 schema 已是 1.2.4，与 skill 版本一致，无需迁移。
 
 ---
 
@@ -272,5 +272,49 @@
 | SKILL.md「你是谁」段 | 含"韧性优先于效率"信念 |
 | workflow-weekly.md | 含 §1.2b 韧性检测 + §1.8b 探索空间提醒 |
 | workflow-strategy.md | 含 §4b 模式性阈值 |
+
+全部通过 → 向用户确认"迁移完成"。
+
+---
+
+### v1.2.4（从 v1.2.3 升级）
+
+#### 新增
+
+- task JSONL 新增可选字段 `status`（not_started/in_progress/blocked）和 `note`（自由文本）
+- 强制规则新增第 8 条（用户报告进度时必须即时写回 active.md）
+- 周复盘快照新增 `[~]` 和 `[!]` 标记（部分完成 / 阻塞）
+- Tasks Pool 概览新增"本周排期"计数行
+
+#### 移除
+
+- INDEX.md 当周快照段（## 当前周 ... ### 必须做 / 该做 / 可以做 / 已完成本周）
+- workflow-healthcheck.md 核查清单原第 4 项（14 项变 13 项）
+
+#### 一次性迁移动作
+
+```
+1. 删除 INDEX.md 中从 "## 当前周" 到 "## Nudge 冷却" 之前的所有内容
+2. 在 Tasks Pool 概览段"active 总数"行后添加：
+   - 本周排期: N 条（must: N, should: N, could: N）
+3. 更新 INDEX.md: data_schema: 1.2.4
+```
+
+#### 行为变更（升级 skill 文件后自动生效）
+
+- 所有任务查询直接从 active.md / done-*.md 实时计算
+- 写操作改为刷新 Tasks Pool 概览计数（不再重新生成快照段）
+- 用户报告进度时 AI 必须即时更新 active.md 的 status/note
+- 周复盘快照区分 完成[x] / 部分完成[~] / 未开始[ ] / 阻塞[!]
+- Nudge 扫描条件 d 排除 blocked 任务
+
+#### 验证清单
+
+| 检查项 | 预期 |
+|--------|------|
+| INDEX.md 无"## 当前周"段 | 确认已删除 |
+| INDEX.md Tasks Pool 概览有"本周排期"行 | 确认存在 |
+| INDEX.data_schema | == "1.2.4" |
+| SKILL.md version | == "1.2.4" |
 
 全部通过 → 向用户确认"迁移完成"。
