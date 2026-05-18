@@ -3,7 +3,7 @@ name: taskos
 description: "通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
-version: 1.2.4
+version: 1.2.5
 license: MIT
 metadata:
   category: productivity
@@ -100,6 +100,11 @@ TASKOS_ROOT: ~/TaskOS
    如果用户说"XX 被卡住了/在等 YY"，status 改为 "blocked"，note 写原因。
    操作后走 journal 和 Mini-Check。
    格式：[时间] #NNN done | progress-update「任务标题」status→in_progress, note: xxx
+
+9. 用户报告全职工作相关信息时（工作时长、加班、出差、工作强度变化），
+   AI 必须立即更新 profile.md「工作量基线 → 全职工作数据」段。
+   如果全职信息变化导致"外部参考区间"需要重新推导，同步更新。
+   格式：journal [profile-workload-update]
 ```
 
 ---
