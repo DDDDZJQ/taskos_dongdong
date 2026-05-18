@@ -10,12 +10,20 @@ AI Agent 的个人技能仓库（private）。
 
 基于「领域/项目/任务」三层 SOP 的通用个人任务管理 skill。
 
-- 版本：v1.2.4
+- 版本：v1.2.5
 - 兼容：Claude Code / Cursor / OpenClaw / WorkBuddy 等支持 Anthropic 风格 skill 的 agent
 - 数据格式：纯 Markdown + JSONL，跨 AI agent 可移植
 
 ### 更新日志
 
+- **v1.2.5**（2026-05-18）：双锚点工作量评估（研究基准 + 个人历史校准）
+  - 纳入 4 项经核实的认知科学研究（Ericsson 1993、Melbourne 2016、韩国 2025、Cal Newport）
+  - 新增周计划 §1.2c：每周主动采集全职工时，动态计算业余深度余量
+  - §1.8 重写为双锚点校准：min(研究参考上限, 个人历史甜点×1.1)
+  - profile.md 新增「工作量基线」段，AI 自动维护（月度更新）
+  - INDEX 新增 weekly_est_limit_source + work_hours_this_week 字段
+  - 强制规则新增第 9 条：用户报告全职变化时必须即时更新 profile
+  - 数据窗口设计：8 周决策层 + 16 周参考层 + 全量归档层
 - **v1.2.4**（2026-05-12）：任务周中进度追踪 + INDEX 架构简化
   - 新增 task 字段：status（not_started/in_progress/blocked）+ note（自由文本进度细节）
   - 新增强制规则第 8 条：用户报告进度时 AI 必须即时写回 active.md
