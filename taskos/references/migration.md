@@ -128,7 +128,7 @@
 > 所有验证通过。
 
 ### 已是最新版本
-> 当前数据 schema 已是 1.2.4，与 skill 版本一致，无需迁移。
+> 当前数据 schema 已是 1.2.5，与 skill 版本一致，无需迁移。
 
 ---
 
@@ -316,5 +316,74 @@
 | INDEX.md Tasks Pool 概览有"本周排期"行 | 确认存在 |
 | INDEX.data_schema | == "1.2.4" |
 | SKILL.md version | == "1.2.4" |
+
+全部通过 → 向用户确认"迁移完成"。
+
+---
+
+### v1.2.5（从 v1.2.4 升级）
+
+#### 新增
+
+- INDEX.md 新增 `weekly_est_limit_source: auto` 字段（auto | manual）
+- INDEX.md 新增 `work_hours_this_week: null` 字段（本周全职工时，每次开周计划时更新）
+- 周快照 `reviews/YYYY-Www.md` frontmatter 新增 `work_hours` 字段
+- profile.md 新增「工作量基线」段（AI 自动维护，含外部参考 + 全职数据 + 个人历史指标）
+- 周计划流程新增 §1.2c（本周全职工时采集）
+- 周计划 §1.8 重写为双锚点校准逻辑（研究基准 + 个人历史）
+- 强制规则新增第 9 条（用户报告全职变化时必须即时更新 profile）
+- journal 新增 `[profile-workload-update]` 标记
+
+#### 一次性迁移动作
+
+```
+1. 在 INDEX.md 元数据区 `weekly_est_limit` 行后添加：
+   weekly_est_limit_source: auto
+   work_hours_this_week: null
+
+2. 在 profile.md 正文末尾添加「工作量基线」段（空模板）：
+   ## 工作量基线（AI 自动维护，每月更新一次）
+   ### 外部参考
+   - 深度工作日上限: 4h/天，20~28h/周（Ericsson 1993）
+   - 总认知工时最佳区间: 25~30h/周（Melbourne 2016）
+   - 全职后业余深度参考区间: _~_h/周
+   ### 全职工作数据
+   - 典型周工作时长: _h
+   - 工作认知强度: _
+   - 典型通勤时长: _h/天
+   - 本段最近更新: <今天>
+   ### 个人历史指标（AI 从快照自动计算）
+   - 数据窗口: 近 0 周（待积累）
+   - 平均完成率: --%
+   - 甜点排期量: --h/周
+   - 各精力档完成率: high --% / normal --% / low --%
+   - 过载周占比: --%
+   - 平均全职工时: --h/周
+   - 长期趋势: --
+   - 本段最近更新: <今天>
+
+3. 更新 INDEX.md: data_schema: 1.2.5
+```
+
+注：个人历史指标初始为空。积累 4 周快照后 AI 首次自动计算并填充。
+
+#### 行为变更（升级 skill 文件后自动生效）
+
+- 每次开周计划时 AI 主动询问本周全职工时（§1.2c），写入 INDEX
+- 周计划 §1.8 从单阈值对比升级为双锚点校准（研究基准 + 个人历史甜点）
+- AI 每月自动更新 profile 工作量基线（无需用户确认）
+- 用户报告全职变化时 AI 必须即时更新 profile（强制规则 #9）
+- 排期建议引用具体数据（"你的历史甜点是 Xh""研究参考上限是 Yh"）
+- 全职 > 52h 时主动建议大幅减排
+
+#### 验证清单
+
+| 检查项 | 预期 |
+|--------|------|
+| INDEX.md 含 weekly_est_limit_source | == "auto" |
+| INDEX.md 含 work_hours_this_week | 字段存在（值可为 null） |
+| profile.md 含「工作量基线」段 | 确认存在 |
+| SKILL.md version | == "1.2.5" |
+| INDEX.data_schema | == "1.2.5" |
 
 全部通过 → 向用户确认"迁移完成"。
