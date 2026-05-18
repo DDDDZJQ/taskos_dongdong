@@ -83,6 +83,28 @@ AI 主动问：
 - 用户同意 → energy_this_week 降为 normal 档执行
 - 冷却：拒绝后 2 周内不再重复，冷却记录写入 INDEX.md「Nudge 冷却」段（格式：`resilience_check: YYYY-Www`）
 
+### 1.2c 本周全职工时采集（v1.2.5 新增）
+
+**触发条件**：每次开周计划时必须执行。
+
+AI 主动问：
+> 这周工作大概多少小时？（加班/出差/调休都算在内）
+
+**用户回答后**：
+1. 记录为 `work_hours_this_week`
+2. 写入 INDEX.md 的 `work_hours_this_week` 字段（与 energy_this_week 同级）
+3. 结合研究基准动态计算本周业余深度参考上限（供 §1.8 使用）
+4. 如果 work_hours_this_week > 52h：
+   > ⚠️ 这周全职超过 52h 了。研究显示这个量级会实质性消耗认知资源。
+   > 建议本周 TaskOS 任务大幅减排，只保留 must 档。
+
+**用户跳过/不回答时**：
+- 使用 profile.md「工作量基线 → 全职工作数据 → 典型周工作时长」作为默认值
+- 该字段也无 → 使用 40h 作为保守默认值
+- 不阻塞流程，继续下一步
+
+**边界情况**：如果用户跳过了 weekly plan 直接做 review，此时 work_hours_this_week 可能为空 → review 生成快照时使用 profile 典型值。
+
 ### 1.3 强制清 inbox
 
 - 列出 inbox 所有未处理条目
@@ -175,21 +197,44 @@ gap               = actual_progress - expected_progress
 
 **整轮排期作为单次 journal 事务**：[in_progress] → 执行 → [done]。
 
-### 1.8 工作量估算 + 留白提醒
+### 1.8 工作量估算 + 双锚点校准（v1.2.5 重写）
 
-排期完成后，AI 自动估算本周总工作量：
+排期完成后，AI 自动执行：
 
-**估算规则**：
+**1. 计算本周 est_total**：
 - 有 `est` 字段的任务：累加 est
 - 无 `est` 字段的任务：按 1h 估算
 
-**对比 `weekly_est_limit`**（INDEX 中字段，用户可设，默认 12h）：
+**2. 计算当周外部参考上限**（基于 §1.2c 采集的 work_hours_this_week）：
+- 工作日余量 = max(0, (35h - work_hours_this_week) / 5) × 5
+- 周末余量 = 根据认知强度（profile.md）：高 4h / 中 6h / 低 7h
+- research_ref = 工作日余量 + 周末余量
+- 上限约束：research_ref ≤ 14h
+- 降级：无 work_hours_this_week → 用 profile 典型值 → 再无 → 用 40h
 
-**超限时主动提醒**：
-> "本周排了约 15h，超过你设的 12h 上限。建议砍掉 could 档的 2 条（约 3h），或者你觉得这周精力够？"
+**3. 读 profile.md「工作量基线 → 个人历史指标」**：
+- personal_sweet_spot: 甜点排期量
+- personal_completion_rate: 近 8 周平均完成率
 
-**连续 3 周超限**（从近 3 周快照文件的 `est_total` 字段读取）：
-> "连续三周超负荷了。认真考虑一下：是上限设太低了，还是确实排太多了？"
+**4. 推荐上限 = min(research_ref, personal_sweet_spot × 1.1)**：
+- 历史数据不足 4 周 → 退化为仅用 research_ref
+- personal_completion_rate < 70% → 推荐上限 = personal_sweet_spot × 0.9
+
+**5. 对比 est_total vs 推荐上限**：
+- a. est_total ≤ 推荐上限 → 不提醒，正常通过
+- b. 超 10~20%：温和提醒
+  > 本周排了约 Xh。你的历史甜点是 Yh（近 8 周完成率 ≥ 80% 的周平均值）。
+  > 研究参考上限是 Zh（基于本周全职 Wh 推算）。建议砍 could 档 N 条。
+- c. 超 20%+：认真建议
+  > 本周排了约 Xh，超出你的历史最佳区间 Y%。
+  > 过去排这么多的周，平均完成率只有 Z%。
+  > 建议降到 Wh——全部做完的正反馈比多排几条重要。
+- d. 连续 3 周 carry_out/planned > 30%：建议降 weekly_est_limit
+  > 最近 N 周数据：[列出每周排期/完成/carry_out]
+  > 建议把上限调到 Yh×1.1 ≈ Zh。
+
+**6. 趋势提示**（如果 long_term_trend == "上升"，近 8 周 > 前 8 周 10%+）：
+> 你最近 2 个月完成效率在持续提升。可以考虑把上限从 X 调到 Y。
 
 **留白提醒**（每次排期结束都说）：
 > "记得给自己留出什么都不做的时间——空白不是浪费，是恢复。"
@@ -304,6 +349,7 @@ week: 2026-W19
 range: 2026-05-12 ~ 2026-05-18
 generated: 2026-05-18
 energy: normal
+work_hours: 42
 ---
 ```
 
