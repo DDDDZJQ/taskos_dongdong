@@ -238,8 +238,10 @@ last_weekly_plan: 2026-05-10
 version: 287
 current_week: 2026-W19
 energy_this_week: normal               # 本周精力状态（high / normal / low）
+work_hours_this_week: 42               # v1.2.5 新增：本周全职工时（小时），每次开周计划时更新
 weekly_est_limit: 12h                  # 每周工作量软上限（用户可设）
-data_schema: 1.1.0                     # v1.1 新增：当前数据 schema 版本
+weekly_est_limit_source: auto          # v1.2.5 新增：auto = AI 双锚点推荐 | manual = 用户手动设定
+data_schema: 1.2.5                     # 当前数据 schema 版本
 proactive:                             # v1.2 新增：主动规划开关
   nudge: on                            # on | off
   strategy: on                         # on | off
@@ -285,6 +287,7 @@ proactive:                             # v1.2 新增：主动规划开关
   - 如果改变了 due_week / tier / 任务完成状态 / active 总数 → 刷新 Tasks Pool 概览计数
 - weekly plan 结束时刷新 `last_weekly_plan`
 - weekly plan 时刷新 `energy_this_week`（用户回答精力状态后写入：high / normal / low）
+- weekly plan 时刷新 `work_hours_this_week`（用户回答本周全职工时后写入，v1.2.5 新增）
 - weekly review 结束时刷新 `last_full_rebuild` 并完整重建 INDEX
 - Tasks Pool 概览中的统计数据（active 总数、by_project 等）在每次刷新 INDEX 时从 active.md JSONL 行直接计算
 
@@ -348,6 +351,7 @@ proactive:                             # v1.2 新增：主动规划开关
 | `gatekeeper-override` | 用户强制覆盖门禁 | 用户坚持写入被拒项目（v1.2.2） |
 | `nudge-韧性-拒绝` | 韧性检测被拒绝 | 冷却 2 周内不再提醒（v1.2.3） |
 | `nudge-留白` | 探索空间提醒已发出 | 冷却 4 周内不再提醒（v1.2.3） |
+| `profile-workload-update` | AI 自动更新了 profile 工作量基线 | 月度校准或用户告知全职变化时（v1.2.5） |
 
 ### 崩溃恢复规则
 
@@ -415,8 +419,8 @@ gap               = actual_progress - expected_progress
 - 错误提示 / 用户对话模板
 
 ### 必须英文（机器可读性）
-- YAML 键名：`type`, `name`, `area`, `priority`, `deadline`, `status`, `progress`, `risk`, `key_milestones`, `yearly_intent`, `rituals`, `identity`, `created`, `milestone`, `desc`, `freq`, `energy_this_week`, `weekly_est_limit`, `energy`, `data_schema`, `justification`
-- YAML 枚举值：`active / dormant / retired`、`core / normal / side`、`active / paused / done / dropped`、`pending / done`、`weekly / monthly`、`high / normal / low`（energy）
+- YAML 键名：`type`, `name`, `area`, `priority`, `deadline`, `status`, `progress`, `risk`, `key_milestones`, `yearly_intent`, `rituals`, `identity`, `created`, `milestone`, `desc`, `freq`, `energy_this_week`, `weekly_est_limit`, `weekly_est_limit_source`, `work_hours_this_week`, `work_hours`, `energy`, `data_schema`, `justification`
+- YAML 枚举值：`active / dormant / retired`、`core / normal / side`、`active / paused / done / dropped`、`pending / done`、`weekly / monthly`、`high / normal / low`（energy）、`auto / manual`（weekly_est_limit_source）
 - JSONL 字段名：`id / title / projects / area / context / est / carry / due_week / tier / captured / completed / outcome / week / ritual_source / ritual_desc / freq`
 - JSONL 字段枚举值：`must / should / could`（tier）、`done / dropped`（outcome）、`weekly / monthly`（freq）
 - ID 格式、ISO 周编号、TASKOS_ROOT 变量名、skill 自身文件名
@@ -441,6 +445,7 @@ week: 2026-W19
 range: 2026-05-12 ~ 2026-05-18
 generated: 2026-05-18
 energy: normal                         # high / normal / low（从 INDEX.energy_this_week 取值）
+work_hours: 42                         # v1.2.5 新增：本周全职工时（从 INDEX.work_hours_this_week 取值）
 ---
 ```
 
@@ -602,3 +607,39 @@ completeness: 0.3                        # 0~1，已填写维度占比
 - ❌ 不做静默推断写入（必须问用户）
 - ❌ 不在每次会话都分析性格
 - ❌ 不将画像信息用于用户未授权的场景
+
+### 工作量基线段（v1.2.5 新增）
+
+profile.md 正文中新增一个顶级段落「工作量基线」，由 AI 自动维护（无需用户确认）：
+
+```markdown
+## 工作量基线（AI 自动维护，每月更新一次）
+
+### 外部参考
+- 深度工作日上限: 4h/天，20~28h/周（Ericsson 1993）
+- 总认知工时最佳区间: 25~30h/周（Melbourne 2016）
+- 全职后业余深度参考区间: _~_h/周（基于下方全职数据动态推导）
+
+### 全职工作数据
+- 典型周工作时长: _h（用户告知后 AI 写入，作为默认值）
+- 工作认知强度: 高/中/低（高=全程需要深度思考；中=部分时段需要；低=大量机械性事务）
+- 典型通勤时长: _h/天
+- 本段最近更新: YYYY-MM-DD
+
+### 个人历史指标（AI 从快照自动计算）
+- 数据窗口: 近 N 周（最少 4 周有效数据后开始计算）
+- 平均完成率: __%
+- 甜点排期量: __h/周（完成率 ≥ 80% 的周的中位数 est_total）
+- 各精力档完成率: high __% / normal __% / low __%
+- 过载周占比: __%（carry_out/planned > 30% 的周数比例）
+- 平均全职工时: __h/周（近 8 周用户报告值的均值）
+- 长期趋势: 上升 / 稳定 / 下降（对比前 8 周）
+- 本段最近更新: YYYY-MM-DD
+```
+
+**自动更新规则**：
+- 每月首次启动：读最近 8 周快照 → 重算所有指标 → 写入
+- 周复盘完成后（如果距上次更新 > 4 周）：同上
+- 用户主动告知全职变化：立即更新全职工作数据段
+- 写入后 journal 标记 `[profile-workload-update]`
+- 此段**不计入 completeness 计算**（因为是 AI 自动维护，不属于用户画像维度）
