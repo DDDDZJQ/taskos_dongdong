@@ -241,7 +241,7 @@ energy_this_week: normal               # 本周精力状态（high / normal / lo
 work_hours_this_week: 42               # v1.2.5 新增：本周全职工时（小时），每次开周计划时更新
 weekly_est_limit: 12h                  # 每周工作量软上限（用户可设）
 weekly_est_limit_source: auto          # v1.2.5 新增：auto = AI 双锚点推荐 | manual = 用户手动设定
-data_schema: 1.2.5                     # 当前数据 schema 版本
+data_schema: 1.3.0                     # 当前数据 schema 版本
 proactive:                             # v1.2 新增：主动规划开关
   nudge: on                            # on | off
   strategy: on                         # on | off
