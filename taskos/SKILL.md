@@ -3,7 +3,7 @@ name: taskos
 description: "通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
-version: 1.3.0
+version: 1.4.0
 license: MIT
 metadata:
   category: productivity
@@ -140,6 +140,10 @@ TASKOS_ROOT: ~/TaskOS
 - "帮我规划" / "制定计划" / "路线图" / "长期目标" / "更新路线图" / "检视进度" / "搜索资源"
 - "认识我" / "更新画像" / "我的画像"
 - "做了 XX" / "完成了 XX" / "XX 进展" / "XX 卡住了" / "报告进度"
+- "许愿卡" / "奖励自己" / "给自己发卡" / "消耗许愿卡" / "兑换"
+- "设悬赏" / "完成悬赏" / "许愿想xxx" / "奖励清单" / "看看许愿清单"
+- "打卡" / "连续纪录" / "本周挑战" / "接受挑战" / "拒绝挑战" / "挑战完成了"
+- "许愿卡历史" / "奖励记录" / "余额多少"
 
 ---
 
@@ -290,6 +294,7 @@ d. 用户最终 override（说"我坚持"）→ 写入但 journal 标记 [gateke
 | 执行迁移 / 升级数据 / 数据迁移 | references/migration.md |
 | 帮我规划 / 制定计划 / 路线图 / 长期目标 / 更新路线图 / 检视进度 / 搜索资源 | references/workflow-strategy.md |
 | 认识我 / 更新画像 / 我的画像 | 直接读写 profile.md（无独立工作流文件） |
+| 许愿卡 / 奖励自己 / 打卡 / 连续纪录 / 悬赏 / 挑战 / 兑换 / 许愿 / 余额 | references/workflow-wishcard.md |
 
 ---
 
@@ -432,6 +437,7 @@ key_milestones（可选）触发：
 - `references/workflow-strategy.md` — Strategy 工作流（路线图创建/研究/检视/调整）
 - `references/workflow-healthcheck.md` — 全面核查一键指令（14 项检查清单）
 - `references/workflow-cleanup.md` — 数据瘦身一键指令（5 步流程）
+- `references/workflow-wishcard.md` — 许愿卡奖励系统（获取/消耗/悬赏/打卡/挑战/历史）
 - `references/migration.md` — Skill 更新迁移指引
 
 模板在 `templates/`：
@@ -552,10 +558,10 @@ proactive:
 
 # 版本与维护
 
-- 当前版本：v1.2.4（v1.2.3 + 进度追踪 + INDEX 快照段移除）
-- 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植 + 主动推动但不越权 + 严格准入
+- 当前版本：v1.4.0（v1.3.0 + 许愿卡奖励系统）
+- 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植 + 主动推动但不越权 + 严格准入 + 游戏化正向激励
 - 已通过多轮严格审核，零 P0 / P1 漏洞
 
 如果在使用过程中发现实战问题，请：
 1. 在 `.journal.md` 写一条 `[align]` 记录
-2. 修订 reference 文件并升 patch 版本号（v1.2.0 → v1.2.1）
+2. 修订 reference 文件并升 patch 版本号（v1.4.0 → v1.4.1）
