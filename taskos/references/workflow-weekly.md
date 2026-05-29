@@ -149,6 +149,17 @@ gap               = actual_progress - expected_progress
 
 ---
 
+### 💡 周计划结束后：提出本周挑战（指导层）
+
+排期完成并 journal [done] 之后，如 rewards/ 目录存在：
+- 读 `rewards/challenges.md`
+- 如果本周还没有挑战（无 `ch-{current_week}` 记录）→ 提出一个新挑战
+- 挑战提出格式："本周挑战来了：「xxx」— 完成可得 N 张许愿卡。接受吗？"
+- 用户接受 → challenges 写入 accepted；用户拒绝 → 写入 declined
+- 如 rewards/ 不存在 → 跳过，不提
+
+---
+
 ### ⚙️ 滞留任务处理规则（规则层）
 
 **定义**：active.md 中 `due_week != null && due_week < current_week` 且未完成。不含 ritual。比较时把 ISO 周转成日期。
@@ -186,6 +197,12 @@ gap               = actual_progress - expected_progress
 4. **INDEX 强制重建**（从源文件完整重建，刷新 last_full_rebuild）
 5. **生成结构化周快照** `reviews/YYYY-Www.md`（格式详见 schema.md）
 6. **journal 记录**
+7. **许愿卡周结算**（如 rewards/ 目录存在，否则跳过）：
+   - 读 bounties.md → 检测 `auto_detect == "weekly_must_clear"` 悬赏（本周 must 全清则兑现）
+   - 读 bounties.md → 检测 `auto_detect == "project_done:xxx"` 悬赏（对比本周 done 的项目）
+   - 读 challenges.md → accepted 但未 completed 的本周挑战 → status 改 failed
+   - 读 ledger.md → 统计本周获取/消耗
+   - 一句话汇报："本周许愿卡 +N / -M，余额 X 张"
 
 ---
 
