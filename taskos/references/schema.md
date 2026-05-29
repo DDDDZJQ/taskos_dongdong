@@ -238,10 +238,12 @@ last_weekly_plan: 2026-05-10
 version: 287
 current_week: 2026-W19
 energy_this_week: normal               # 本周精力状态（high / normal / low）
+mood_this_week: null                    # v1.5.0 新增：本周情绪底色（null / 平稳 / 有动力 / 焦虑 / 疲惫 / 低落 / 烦躁 / 自由文本）
 work_hours_this_week: 42               # v1.2.5 新增：本周全职工时（小时），每次开周计划时更新
 weekly_est_limit: 12h                  # 每周工作量软上限（用户可设）
 weekly_est_limit_source: auto          # v1.2.5 新增：auto = AI 双锚点推荐 | manual = 用户手动设定
-data_schema: 1.3.0                     # 当前数据 schema 版本
+data_schema: 1.5.0                     # 当前数据 schema 版本
+last_value_audit: null                 # v1.5.0 新增：上次价值对齐审计日期（YYYY-MM-DD）
 proactive:                             # v1.2 新增：主动规划开关
   nudge: on                            # on | off
   strategy: on                         # on | off
@@ -287,8 +289,10 @@ proactive:                             # v1.2 新增：主动规划开关
   - 如果改变了 due_week / tier / 任务完成状态 / active 总数 → 刷新 Tasks Pool 概览计数
 - weekly plan 结束时刷新 `last_weekly_plan`
 - weekly plan 时刷新 `energy_this_week`（用户回答精力状态后写入：high / normal / low）
+- weekly plan 时刷新 `mood_this_week`（用户回答情绪底色后写入，跳过则写 null）
 - weekly plan 时刷新 `work_hours_this_week`（用户回答本周全职工时后写入，v1.2.5 新增）
 - weekly review 结束时刷新 `last_full_rebuild` 并完整重建 INDEX
+- 价值对齐审计完成后刷新 `last_value_audit` 为今天日期
 - Tasks Pool 概览中的统计数据（active 总数、by_project 等）在每次刷新 INDEX 时从 active.md JSONL 行直接计算
 
 ### "已完成本周"子段查询规则
@@ -419,7 +423,7 @@ gap               = actual_progress - expected_progress
 - 错误提示 / 用户对话模板
 
 ### 必须英文（机器可读性）
-- YAML 键名：`type`, `name`, `area`, `priority`, `deadline`, `status`, `progress`, `risk`, `key_milestones`, `yearly_intent`, `rituals`, `identity`, `created`, `milestone`, `desc`, `freq`, `energy_this_week`, `weekly_est_limit`, `weekly_est_limit_source`, `work_hours_this_week`, `work_hours`, `energy`, `data_schema`, `justification`
+- YAML 键名：`type`, `name`, `area`, `priority`, `deadline`, `status`, `progress`, `risk`, `key_milestones`, `yearly_intent`, `rituals`, `identity`, `created`, `milestone`, `desc`, `freq`, `energy_this_week`, `mood_this_week`, `weekly_est_limit`, `weekly_est_limit_source`, `work_hours_this_week`, `work_hours`, `energy`, `mood`, `recovery_week`, `data_schema`, `justification`, `last_value_audit`
 - YAML 枚举值：`active / dormant / retired`、`core / normal / side`、`active / paused / done / dropped`、`pending / done`、`weekly / monthly`、`high / normal / low`（energy）、`auto / manual`（weekly_est_limit_source）
 - JSONL 字段名：`id / title / projects / area / context / est / carry / due_week / tier / captured / completed / outcome / week / ritual_source / ritual_desc / freq`
 - JSONL 字段枚举值：`must / should / could`（tier）、`done / dropped`（outcome）、`weekly / monthly`（freq）
@@ -446,6 +450,8 @@ range: 2026-05-12 ~ 2026-05-18
 generated: 2026-05-18
 energy: normal                         # high / normal / low（从 INDEX.energy_this_week 取值）
 work_hours: 42                         # v1.2.5 新增：本周全职工时（从 INDEX.work_hours_this_week 取值）
+mood: null                             # v1.5.0 新增：本周情绪底色（从 INDEX.mood_this_week 取值）
+recovery_week: false                   # v1.5.0 新增：是否为恢复周（true 时不计入甜点值基准）
 ---
 ```
 
