@@ -128,7 +128,7 @@
 > 所有验证通过。
 
 ### 已是最新版本
-> 当前数据 schema 已是 1.3.0，与 skill 版本一致，无需迁移。
+> 当前数据 schema 已是 1.4.0，与 skill 版本一致，无需迁移。
 
 ---
 
@@ -427,5 +427,54 @@
 | SKILL.md 含「设计哲学」段 | ⚙️ RULE / 💡 GUIDE 分层说明存在 |
 | workflow-weekly.md | 含 ⚙️ 必须完成的动作 + 💡 指导层标注 |
 | 强制规则条数 | 8 条 |
+
+全部通过 → 向用户确认"迁移完成"。
+
+---
+
+### v1.4.0（从 v1.3.0 升级）
+
+#### 性质
+
+功能性新增（许愿卡奖励系统），**无现有数据结构变更**。
+
+#### 新增
+
+- 新增 `rewards/` 目录及 5 个文件（ledger/bounties/wishlist/streaks/challenges）
+- INDEX.md 新增 `## Wish Cards` 段
+- schema.md 新增第十三节（许愿卡数据格式）
+- 新建 workflow-wishcard.md（许愿卡完整工作流）
+- workflow-weekly.md 周复盘新增第 7 步（许愿卡周结算）
+- workflow-weekly.md 周计划新增末尾步骤（提出本周挑战）
+- SKILL.md 触发词新增许愿卡相关
+- SKILL.md 工作流路由新增 workflow-wishcard.md
+- journal 新增多个标记（wish-card-earn/spend、bounty-*、streak-*、challenge-*、wishlist-add）
+
+#### 一次性迁移动作
+
+**无强制迁移**。许愿卡系统在用户首次触发相关指令时自动初始化。
+
+```
+1.（可选）更新 INDEX.md: data_schema: 1.4.0
+```
+
+#### 行为变更（升级 skill 文件后自动生效）
+
+- 用户说"许愿卡/奖励自己/打卡/悬赏/挑战"等触发词时进入许愿卡工作流
+- 周计划完成后 AI 提出本周挑战（rewards/ 不存在则跳过）
+- 周复盘末尾新增许愿卡周结算（rewards/ 不存在则跳过）
+- 所有许愿卡操作遵循懒加载原则（不增加启动行为负担）
+
+#### 验证清单
+
+| 检查项 | 预期 |
+|--------|------|
+| SKILL.md version | == "1.4.0" |
+| SKILL.md 触发词含"许愿卡" | ✅ |
+| SKILL.md 工作流路由含 workflow-wishcard.md | ✅ |
+| workflow-wishcard.md | 文件存在 |
+| workflow-weekly.md 周复盘含第 7 步 | ✅ |
+| schema.md 含第十三节（许愿卡数据格式） | ✅ |
+| migration.md 含 v1.4.0 段 | ✅ |
 
 全部通过 → 向用户确认"迁移完成"。
