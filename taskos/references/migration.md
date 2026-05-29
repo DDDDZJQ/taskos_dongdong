@@ -128,7 +128,7 @@
 > 所有验证通过。
 
 ### 已是最新版本
-> 当前数据 schema 已是 1.4.0，与 skill 版本一致，无需迁移。
+> 当前数据 schema 已是 1.5.0，与 skill 版本一致，无需迁移。
 
 ---
 
@@ -476,5 +476,77 @@
 | workflow-weekly.md 周复盘含第 7 步 | ✅ |
 | schema.md 含第十三节（许愿卡数据格式） | ✅ |
 | migration.md 含 v1.4.0 段 | ✅ |
+
+全部通过 → 向用户确认"迁移完成"。
+
+---
+
+### v1.5.0（从 v1.4.0 升级）
+
+#### 性质
+
+行为增强（心理增强层），**无数据结构强制变更**。新字段在首次周计划时自动初始化。
+
+#### 新增
+
+- INDEX.md 新增 `mood_this_week: null` 字段（本周情绪底色）
+- INDEX.md 新增 `last_value_audit: null` 字段（上次价值审计日期）
+- 周快照 frontmatter 新增 `mood` 字段（从 INDEX 取值）
+- 周快照 frontmatter 新增 `recovery_week` 字段（恢复周标记）
+- 周快照正文可能新增 `## 本周反思` 段和 `## 月度反思` 段
+- 周计划新增恢复协议检测（连续高压/低迷时建议恢复周）
+- 周计划信息采集新增情绪底色询问（可选）
+- 周计划排期改为 AI 预排草案模式（用户审核确认）
+- 周计划滞留处理改为决策合批模式（用户审核确认）
+- 周复盘新增进展可视化（文本进度条对比）
+- 周复盘新增微反思问题（每周 1 个，从问题池轮换）
+- 每 4 周新增月度抽象化问题
+- 复盘/回顾时可触发价值对齐审计（约每 12 周）
+- progress-update 时 AI 附加进展对比叙事
+- profile.md 工作量基线更新逻辑排除 recovery_week 快照
+
+#### 一次性迁移动作
+
+**无强制迁移**。新字段在首次周计划时自动初始化为 null/false。
+
+```
+1.（可选）在 INDEX.md 元数据区添加：
+   mood_this_week: null
+   last_value_audit: null
+
+2.（可选）更新 INDEX.md: data_schema: 1.5.0
+```
+
+#### 行为变更（升级 skill 文件后自动生效）
+
+- 周计划开头检测恢复协议条件（快照不足时跳过）
+- 周计划信息采集时温和询问情绪底色（不强制）
+- 周计划排期改为"AI 提供草案 → 用户审核确认"模式
+- 周计划滞留处理改为批量建议模式
+- 周复盘新增进展可视化展示（文本进度条）
+- 周复盘末尾新增微反思问题
+- 每 4 周新增月度抽象化
+- progress-update 时附加进展对比
+- 约每 12 周触发价值对齐审计
+- 恢复周的快照标记 recovery_week: true，不计入甜点值
+
+#### 验证清单
+
+| 检查项 | 预期 |
+|--------|------|
+| SKILL.md version | == "1.5.0" |
+| workflow-weekly.md 含恢复协议段 | ✅ |
+| workflow-weekly.md 含情绪采集 | ✅ |
+| workflow-weekly.md 含 AI 预排草案 | ✅ |
+| workflow-weekly.md 含决策合批 | ✅ |
+| workflow-weekly.md 含进展可视化 | ✅ |
+| workflow-weekly.md 含微反思 | ✅ |
+| workflow-weekly.md 含月度抽象 | ✅ |
+| workflow-weekly.md 含恢复周复盘调整 | ✅ |
+| workflow-retrospect.md 含价值审计 | ✅ |
+| schema.md INDEX 含 mood_this_week | ✅ |
+| schema.md INDEX 含 last_value_audit | ✅ |
+| schema.md 快照含 mood + recovery_week | ✅ |
+| migration.md 含 v1.5.0 段 | ✅ |
 
 全部通过 → 向用户确认"迁移完成"。
