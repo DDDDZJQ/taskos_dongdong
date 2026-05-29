@@ -3,7 +3,7 @@ name: taskos
 description: "通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
-version: 1.5.0
+version: 1.5.1
 license: MIT
 metadata:
   category: productivity
@@ -103,6 +103,7 @@ TASKOS_ROOT: ~/TaskOS
 
 3. 每次写操作后必须刷新 INDEX 的 last_updated、version。
    如果操作改变了 due_week / tier / 任务完成状态 / active 总数，刷新 Tasks Pool 概览计数。
+   例外：reflections.md（随手反思流）独立于任务池，其写操作只走 journal，不刷新 INDEX。
 
 4. 启动时如检测到 .journal.md 末尾有未配对 [in_progress]，
    必须主动告知用户并询问处理方式（A 继续 / B 回滚 / C 标记已完成）。
@@ -143,6 +144,7 @@ TASKOS_ROOT: ~/TaskOS
 - "帮我规划" / "制定计划" / "路线图" / "长期目标" / "更新路线图" / "检视进度" / "搜索资源"
 - "认识我" / "更新画像" / "我的画像"
 - "做了 XX" / "完成了 XX" / "XX 进展" / "XX 卡住了" / "报告进度"
+- "记个反思" / "随手反思" / "想到一件事" / "记一下感想" / "突然想到"
 - "许愿卡" / "奖励自己" / "给自己发卡" / "消耗许愿卡" / "兑换"
 - "设悬赏" / "完成悬赏" / "许愿想xxx" / "奖励清单" / "看看许愿清单"
 - "打卡" / "连续纪录" / "本周挑战" / "接受挑战" / "拒绝挑战" / "挑战完成了"
@@ -288,6 +290,7 @@ d. 用户最终 override（说"我坚持"）→ 写入但 journal 标记 [gateke
 | 触发词 | 进入工作流 |
 |---|---|
 | 记一下 / 加任务 / 帮我归类 / 把 X 归到 Y | references/workflow-capture.md |
+| 记个反思 / 随手反思 / 想到一件事 / 记一下感想 / 突然想到 | references/workflow-reflect.md |
 | 开周计划 / 这周要做什么 / 排一下本周 | references/workflow-weekly.md（plan 部分） |
 | 周复盘 / 本周怎么样 | references/workflow-weekly.md（review 部分） |
 | 把 X 改名为 Y / 重命名 X | references/workflow-rename.md |
@@ -335,6 +338,7 @@ d. 用户最终 override（说"我坚持"）→ 写入但 journal 标记 [gateke
 |---|---|
 | Capture 一条 task 到 active.md | id 全局唯一（active + 当 captured 月 done + inbox）；引用的 project 是否存在；动词前置改写完成；INDEX Tasks Pool 计数刷新 |
 | Capture 一条 task 到 inbox.md | id 全局唯一；动词前置改写完成；captured 日期已填；INDEX 刷新 |
+| 记录一条随手反思到 reflections.md | id 当天唯一（refl-YYYYMMDD-NNN）；content 为用户原话未加工；date/week 已填；走 journal；**不刷新 INDEX**（反思流独立于任务池） |
 | Inbox 整理（移到 active） | inbox.md 该行已删；active.md 已 append 且 ID 保留；缺失字段已补全（projects/area/carry=0/due_week=null/tier=null/status="not_started"/note=null）；INDEX Tasks Pool 计数刷新 |
 | 完成一条 task | active.md 该行已删；done-YYYY-MM.md 已 append 全字段（含 status/note/null）+ completed + outcome:done + week；INDEX Tasks Pool 计数刷新 |
 | 放弃一条 task | active.md 该行已删；done-YYYY-MM.md 已 append 全字段 + completed（今天）+ outcome:dropped；INDEX Tasks Pool 计数刷新 |
@@ -401,6 +405,8 @@ d. 用户最终 override（说"我坚持"）→ 写入但 journal 标记 [gateke
 | `tasks/active.md` | 已分类未完成的中央池，**永续**（标题 + JSONL 区块） |
 | `tasks/done-YYYY-MM.md` | 已完成 / 放弃归档（标题 + JSONL 区块，按 completed 月份直接写入） |
 
+> `reflections.md`（随手反思流）不是任务文件——它存放想法/感受/觉察，不参与任务池计数和排期，详见 workflow-reflect.md。
+
 ---
 
 # 风险模型简表
@@ -435,6 +441,7 @@ key_milestones（可选）触发：
 
 - `references/schema.md` — 完整数据模型 + JSONL 操作规则 + INDEX 格式 + ID 规范
 - `references/workflow-capture.md` — 捕获分层 + inbox 整理详细 SOP
+- `references/workflow-reflect.md` — 随手反思（记录想法到 reflections.md + 与 capture 区分）
 - `references/workflow-weekly.md` — 周计划 + 周复盘 + 风险模型 + 完整性扫描
 - `references/workflow-rename.md` — 重命名工作流 + 旧名历史保留
 - `references/workflow-retrospect.md` — 手动复盘（从周快照实时生成趋势分析）
@@ -562,7 +569,7 @@ proactive:
 
 # 版本与维护
 
-- 当前版本：v1.5.0（v1.4.0 + 心理增强层）
+- 当前版本：v1.5.1（v1.5.0 + 随手反思）
 - 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植 + 主动推动但不越权 + 严格准入 + 游戏化正向激励 + 心理增强（恢复/进展/情绪/反思/决策/价值）
 - 已通过多轮严格审核，零 P0 / P1 漏洞
 
