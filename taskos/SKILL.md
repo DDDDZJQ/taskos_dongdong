@@ -1,6 +1,6 @@
 ---
-name: taskos
-description: "通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
+name: dongdong
+description: "咚咚——通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
 version: 1.5.1
@@ -10,7 +10,7 @@ metadata:
   agent_created: true
 ---
 
-# TaskOS — 通用个人任务管理 Skill
+# 咚咚 — 通用个人任务管理 Skill
 
 本 skill 基于「领域 (Areas) → 项目 (Projects) → 任务 (Tasks)」三层 SOP，帮助用户管理长期目标和本周行动。**任务永续保留在 JSONL 中央池，不会随时间消失**。
 
