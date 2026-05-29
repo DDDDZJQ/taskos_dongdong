@@ -6,6 +6,27 @@
 
 - `taskos/` — 咚咚 · 个人任务管理 Skill
 
+```
+taskos/                         咚咚 · 个人任务管理 Skill
+├── SKILL.md                    入口：人设 / 强制规则 / 启动行为 / 工作流路由
+├── references/                 详细工作流与数据规则（按需加载）
+│   ├── schema.md               数据模型 + JSONL 操作 + INDEX 格式 + ID 规范
+│   ├── migration.md            版本迁移指引
+│   ├── workflow-capture.md     任务捕获 + inbox 整理
+│   ├── workflow-reflect.md     随手反思
+│   ├── workflow-weekly.md      周计划 + 周复盘 + 风险模型
+│   ├── workflow-rename.md      重命名 + 旧名历史保留
+│   ├── workflow-retrospect.md  手动复盘 + 价值对齐审计
+│   ├── workflow-strategy.md    长期路线图（创建/研究/检视/调整）
+│   ├── workflow-healthcheck.md 全面核查（一键体检）
+│   ├── workflow-cleanup.md     数据瘦身
+│   └── workflow-wishcard.md    许愿卡奖励系统
+└── templates/                  文件模板
+    ├── area.md                 领域模板
+    ├── project.md              项目模板
+    └── active-jsonl-line.md    任务 JSONL 行格式范例
+```
+
 ## 咚咚 Skill
 
 基于「领域/项目/任务」三层 SOP 的通用个人任务管理 skill。
