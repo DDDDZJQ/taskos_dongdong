@@ -3,7 +3,7 @@ name: taskos
 description: "通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
-version: 1.4.0
+version: 1.5.0
 license: MIT
 metadata:
   category: productivity
@@ -69,7 +69,7 @@ TASKOS_ROOT: ~/TaskOS
 **规则层**（标记为 ⚙️ RULE）：数据格式、journal 记录、INDEX 同步、操作原子性。
 这些规则存在是为了保证跨会话数据一致性。违反会导致数据丢失或漂移。必须严格执行。
 
-**指导层**（标记为 💡 GUIDE）：交互方式、话术风格、阈值建议、检测逻辑、提醒时机。
+**指导层**（标记为 💡 GUIDE）：交互方式、话术风格、阈值建议、检测逻辑、提醒时机、心理增强机制。
 这些内容告诉你"要达成什么目标"和"有哪些参考"，但不规定你具体怎么说话或严格按什么步骤来。
 你有判断力——用它。
 
@@ -84,6 +84,8 @@ TASKOS_ROOT: ~/TaskOS
 - 用户报告全职工作信息时（工时、加班、强度变化），及时更新 profile.md 工作量基线段
 - 排期建议尽量引用具体数据（历史完成率、甜点值）而非泛泛的"少排一点"
 - 检测到用户状态异常（连续低精力、连续过载）时主动但温和地关心
+- 用户报告进度时附加一句进展对比（"这个项目从 X% 推到了 Y%"），让进展可感知
+- 周计划排期优先提供 AI 预排草案供用户审核，减少决策负载
 
 ---
 
@@ -136,6 +138,7 @@ TASKOS_ROOT: ~/TaskOS
 - "记一下…" / "加任务" / "我现在要做什么" / "还有什么没做" / "把 X 归到 Y"
 - "全面核查" / "系统检查" / "数据体检" / "数据瘦身" / "清理文档" / "收拾收拾"
 - "回顾" / "看看趋势" / "看看历史" / "我最近怎么样"
+- "价值对齐" / "时间花在哪了" / "值不值" / "方向对不对"
 - "执行迁移" / "升级数据" / "数据迁移"
 - "帮我规划" / "制定计划" / "路线图" / "长期目标" / "更新路线图" / "检视进度" / "搜索资源"
 - "认识我" / "更新画像" / "我的画像"
@@ -291,6 +294,7 @@ d. 用户最终 override（说"我坚持"）→ 写入但 journal 标记 [gateke
 | 全面核查 / 系统检查 / 数据体检 / 健康检查 | references/workflow-healthcheck.md |
 | 数据瘦身 / 清理文档 / 文档体检 / 收拾收拾 | references/workflow-cleanup.md |
 | 回顾 / 看看趋势 / 看看历史 / 我最近怎么样 / 复盘一下最近 | references/workflow-retrospect.md |
+| 价值对齐 / 时间花在哪了 / 值不值 / 方向对不对 | references/workflow-retrospect.md（价值审计段） |
 | 执行迁移 / 升级数据 / 数据迁移 | references/migration.md |
 | 帮我规划 / 制定计划 / 路线图 / 长期目标 / 更新路线图 / 检视进度 / 搜索资源 | references/workflow-strategy.md |
 | 认识我 / 更新画像 / 我的画像 | 直接读写 profile.md（无独立工作流文件） |
@@ -558,8 +562,8 @@ proactive:
 
 # 版本与维护
 
-- 当前版本：v1.4.0（v1.3.0 + 许愿卡奖励系统）
-- 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植 + 主动推动但不越权 + 严格准入 + 游戏化正向激励
+- 当前版本：v1.5.0（v1.4.0 + 心理增强层）
+- 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植 + 主动推动但不越权 + 严格准入 + 游戏化正向激励 + 心理增强（恢复/进展/情绪/反思/决策/价值）
 - 已通过多轮严格审核，零 P0 / P1 漏洞
 
 如果在使用过程中发现实战问题，请：
