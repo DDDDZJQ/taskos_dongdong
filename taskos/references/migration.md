@@ -550,3 +550,52 @@
 | migration.md 含 v1.5.0 段 | ✅ |
 
 全部通过 → 向用户确认"迁移完成"。
+
+---
+
+### v1.5.1（从 v1.5.0 升级）
+
+#### 性质
+
+行为增强（随手反思），**无数据结构强制变更**。新增独立文件 `reflections.md`，无 INDEX 字段变更。
+
+#### 新增
+
+- 新增 `reflections.md`（随手反思滚动文件，标题 + JSONL 区块）
+- 新增触发词：记个反思 / 随手反思 / 想到一件事 / 记一下感想 / 突然想到
+- 新增 `references/workflow-reflect.md` 工作流
+- 周复盘微反思环节新增"先汇总本周散记"步骤
+- ID 规范新增 `refl-YYYYMMDD-NNN` 格式
+
+#### 一次性迁移动作
+
+**无强制迁移**。`reflections.md` 在用户首次触发随手反思时自动创建（不存在则建）。
+
+```
+无需任何手工操作。data_schema 保持 1.5.0 不变
+（随手反思为行为增强，新增独立文件，不涉及 INDEX/快照字段变更）。
+```
+
+#### 行为变更（升级 skill 文件后自动生效）
+
+- 用户可随时用反思触发词记录想法到 reflections.md
+- "记一下 XX"仍默认走 capture（向后兼容）；"记个反思/随手反思"等才走反思工作流
+- 周复盘微反思前先回顾并汇总本周散记进快照 `## 本周反思` 段
+
+#### 验证清单
+
+| 检查项 | 预期 |
+|--------|------|
+| SKILL.md version | == "1.5.1" |
+| SKILL.md 触发场景含反思触发词 | ✅ |
+| SKILL.md 工作流路由含 workflow-reflect.md | ✅ |
+| SKILL.md Mini-Check 含随手反思行 | ✅ |
+| SKILL.md 参考文件路由含 workflow-reflect.md | ✅ |
+| workflow-reflect.md 存在且含 capture 区分规则 | ✅ |
+| workflow-weekly.md 周复盘含"汇总本周散记"步骤 | ✅ |
+| schema.md 文件清单含 reflections.md | ✅ |
+| schema.md 含随手反思数据格式段（§十四） | ✅ |
+| schema.md ID 规范含 refl- 格式 | ✅ |
+| migration.md 含 v1.5.1 段 | ✅ |
+
+全部通过 → 向用户确认"迁移完成"。
