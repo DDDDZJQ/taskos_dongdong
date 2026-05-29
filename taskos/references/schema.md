@@ -17,6 +17,7 @@
 | **`tasks/active.md`** | **标题 + JSONL 区块** |
 | **`tasks/done-YYYY-MM.md`** | **标题 + JSONL 区块** |
 | `reviews/YYYY-Www.md` | Markdown + YAML frontmatter（结构化周快照） |
+| `reflections.md` | 标题 + JSONL 区块（随手反思流，v1.5.1 新增） |
 
 ---
 
@@ -218,6 +219,7 @@ strategy_phase: 1
 | 普通任务 | `t-YYYYMMDD-NNN` | `t-20260510-001` |
 | 周频仪式型 | `r-YYYY-Www-NNN` | `r-2026-W19-001` |
 | 月频仪式型 | `r-YYYY-MM-NNN` | `r-2026-05-001` |
+| 随手反思（v1.5.1） | `refl-YYYYMMDD-NNN` | `refl-20260529-001` |
 
 **ID 唯一性保证**：每次新建 ID 时，AI 必须扫描以下源以确认 NNN 序号唯一：
 - `tasks/active.md`
@@ -242,7 +244,7 @@ mood_this_week: null                    # v1.5.0 新增：本周情绪底色（n
 work_hours_this_week: 42               # v1.2.5 新增：本周全职工时（小时），每次开周计划时更新
 weekly_est_limit: 12h                  # 每周工作量软上限（用户可设）
 weekly_est_limit_source: auto          # v1.2.5 新增：auto = AI 双锚点推荐 | manual = 用户手动设定
-data_schema: 1.5.0                     # 当前数据 schema 版本
+data_schema: 1.5.0                     # 当前数据 schema 版本（随手反思 v1.5.1 为行为增强，新增独立 reflections.md，无 INDEX 字段变更）
 last_value_audit: null                 # v1.5.0 新增：上次价值对齐审计日期（YYYY-MM-DD）
 proactive:                             # v1.2 新增：主动规划开关
   nudge: on                            # on | off
@@ -761,3 +763,43 @@ challenge_status: null
 - 每行合法 JSON，占满一行
 - 修改用 id 定位 → 整行替换
 - 坏行跳过 + journal [align]
+
+---
+
+## 十四、随手反思数据格式（reflections.md）（v1.5.1 新增）
+
+### 文件路径
+
+`${TASKOS_ROOT}/reflections.md`
+
+### 整体结构
+
+```markdown
+# Reflections
+## ~~~ JSONL 区块开始 ~~~
+{"id":"refl-20260529-001","date":"2026-05-29","week":"2026-W22","content":"早上写东西效率明显比晚上高"}
+## ~~~ JSONL 区块结束 ~~~
+```
+
+### 行格式
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `id` | string | ✅ | `refl-YYYYMMDD-NNN` |
+| `date` | string | ✅ | 记录日期（YYYY-MM-DD） |
+| `week` | string | ✅ | 记录时所属 ISO 周（用于周复盘汇总过滤） |
+| `content` | string | ✅ | 用户原话，AI 不二次加工 |
+
+> 仅 4 个字段，刻意不设 `tags` / `source` / `category` 等预留字段——JSONL 向后兼容，需要时零成本追加。
+
+### 操作规则
+
+- JSONL 操作规则同 tasks/active.md（区块边界固定、每行合法 JSON 占满一行、坏行跳过 + journal [align]）
+- 写操作走 journal（`[时间] #NNN done | reflect refl-xxx → reflections.md`）
+- **不刷新 INDEX**：reflections.md 独立于任务池/项目体系，不参与任何 INDEX 计数和启动校验
+- ID 唯一性：新建时扫描 reflections.md 当天已有的 `refl-YYYYMMDD-NNN`，NNN 从 001 起递增
+- 文件不存在时首次记录自动创建（标题 + 空 JSONL 区块）
+
+### 与周复盘的关系
+
+周复盘微反思环节读取 `week == current_week` 的散记，汇总进当周快照 `## 本周反思` 段（正文用 `[随手]` 前缀标注，非数据字段）。汇总后散记**保留**在 reflections.md，不删除。详见 workflow-weekly.md 与 workflow-reflect.md。
