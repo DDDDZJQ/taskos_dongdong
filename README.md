@@ -1,8 +1,12 @@
+# 咚咚 🪔
+
+> 一个会主动判断、会照顾你状态的 AI 任务管理伙伴。
+
 ## 目录
 
-- `taskos/` — TaskOS 个人任务管理 Skill
+- `taskos/` — 咚咚 · 个人任务管理 Skill
 
-## TaskOS Skill
+## 咚咚 Skill
 
 基于「领域/项目/任务」三层 SOP 的通用个人任务管理 skill。
 
