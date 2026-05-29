@@ -9,6 +9,7 @@ status: active                       # active | paused | done | dropped
 milestone: "（一句话描述里程碑：什么算这个项目完成？）"
 progress: 0.0                        # 0-1，用户主观给（首次创建为 0）
 risk: 🟢                             # 🟢 | 🟡 | 🔴，由 weekly 自动写入
+justification: "___"                 # v1.2.2 必填：通过 Gatekeeper 质询后，简述为什么该项目值得被 TaskOS 管理
 
 # 可选：关键里程碑（防温水煮青蛙）
 # 用 key_milestones 列表罗列必须完成的关键节点
