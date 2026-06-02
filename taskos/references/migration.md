@@ -128,7 +128,7 @@
 > 所有验证通过。
 
 ### 已是最新版本
-> 当前数据 schema 已是 1.5.0，与 skill 版本一致，无需迁移。
+> 当前数据 schema 已与 skill 版本一致（最新为 1.7.0），无需迁移。
 
 ---
 
@@ -597,5 +597,75 @@
 | schema.md 含随手反思数据格式段（§十四） | ✅ |
 | schema.md ID 规范含 refl- 格式 | ✅ |
 | migration.md 含 v1.5.1 段 | ✅ |
+
+全部通过 → 向用户确认"迁移完成"。
+
+---
+
+### v1.7.0（从 v1.5.1 升级，合并 v1.6.0 + v1.7.0）
+
+#### 性质
+
+合并升级：v1.6.0（三档排期时间制）+ v1.7.0（习惯打卡系统）。**新增可选字段 + 新增独立文件，无破坏性迁移**。data_schema 升 1.7.0。
+
+#### 新增（v1.6.0 三档排期时间制）
+
+- INDEX.md 新增 `weekly_tier_limits` 段（must: 15h、should: null、could: null）
+- INDEX.md 新增 `tier_limits_source: default`
+- 三档排期上限从"限条数"改为"限时间"：周总上限 weekly_est_limit（默认上调到 32h）+ must/should 时间子上限 + could 纯弹性
+- 排期时对 must/should 缺 est 任务做推断或问询，兜底 1h
+- 精力档从"查死表定条数"改为指导层浮动比例
+
+#### 新增（v1.7.0 习惯打卡系统）
+
+- 新增 `habits.md`（习惯打卡，标题 + JSONL，懒加载）
+- INDEX.md 新增 `## Habits 概览` 段
+- 新增触发词：打卡 / 习惯打卡 / 加个习惯 / 我的习惯 / 习惯毕业 / 升到核心层 / 降到观察层
+- 新增 `references/workflow-habit.md` 工作流
+- ID 规范新增 `h-YYYYMMDD-NNN`
+- journal 新增 `[habit-create]` / `[habit-checkin]` / `[habit-graduate]` 标记
+- 许愿卡 earn source 新增 `habit-graduate`（核心习惯毕业发 1 张）
+
+#### 一次性迁移动作
+
+```
+1. INDEX.md 元数据区在 weekly_est_limit 行后添加：
+   weekly_est_limit_source: manual    （若已有则保留）
+   weekly_tier_limits:
+     must: 15h
+     should: null
+     could: null
+   tier_limits_source: default
+2. （可选）将 weekly_est_limit 从旧默认 12h 上调到 32h，或在首次开周计划时由 AI 引导确认
+3. INDEX.md 末尾添加 `## Habits 概览` 段（核心层: 0/3 / 观察层: 0），或首次用到时自动建
+4. 更新 INDEX.md: data_schema: 1.7.0
+```
+
+> `habits.md` 在用户首次创建习惯/打卡时自动创建（不存在则建），无需预建。
+
+#### 行为变更（升级 skill 文件后自动生效）
+
+- 周计划三档排期改为时间制；首次排期 AI 引导确认三档时间额度（must 15h / should 8h 建议 / could 不限 / 总 32h）
+- 精力低的周 AI 按比例建议下调时间额度
+- 新增习惯打卡：核心层（硬上限 3 个，每日批量打卡"默认全过只报例外"）+ 观察层（不限量，只累计不断签）
+- 核心习惯毕业（~66 天锚点，可拒绝）→ 旋转门腾位 + 发 1 张许愿卡
+- `core 项目 ≤ 3` 约束保持不变（与三档排期无关）
+
+#### 验证清单
+
+| 检查项 | 预期 |
+|--------|------|
+| SKILL.md version | == "1.7.0" |
+| INDEX 含 weekly_tier_limits + tier_limits_source | ✅ |
+| weekly_tier_limits.could 恒为 null | ✅ |
+| INDEX 含 ## Habits 概览 段 | ✅ |
+| SKILL.md 触发场景 + 路由含习惯打卡 / workflow-habit.md | ✅ |
+| workflow-habit.md 存在且含批量打卡 + 与 Streak 划界 | ✅ |
+| workflow-weekly.md 三档表为时间制 + 含 est 缺失处理 | ✅ |
+| schema.md 含习惯数据格式（§十五）+ h- ID + weekly_tier_limits | ✅ |
+| schema.md journal 标记含 habit-create/checkin/graduate | ✅ |
+| workflow-wishcard.md earn source 含 habit-graduate | ✅ |
+| `core 项目 ≤ 3` 约束仍存在且未改 | ✅ |
+| INDEX.data_schema | == "1.7.0" |
 
 全部通过 → 向用户确认"迁移完成"。

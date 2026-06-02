@@ -14,6 +14,7 @@ taskos/                         咚咚 · 个人任务管理 Skill
 │   ├── migration.md            版本迁移指引
 │   ├── workflow-capture.md     任务捕获 + inbox 整理
 │   ├── workflow-reflect.md     随手反思
+│   ├── workflow-habit.md       习惯打卡（分层 + 批量打卡 + 旋转门毕业）
 │   ├── workflow-weekly.md      周计划 + 周复盘 + 风险模型
 │   ├── workflow-rename.md      重命名 + 旧名历史保留
 │   ├── workflow-retrospect.md  手动复盘 + 价值对齐审计
@@ -31,7 +32,7 @@ taskos/                         咚咚 · 个人任务管理 Skill
 
 基于「领域/项目/任务」三层 SOP 的通用个人任务管理 skill。
 
-- 版本：v1.5.1
+- 版本：v1.7.0
 - 兼容：Claude Code / Cursor / OpenClaw / WorkBuddy 等支持 Anthropic 风格 skill 的 agent
 - 数据格式：纯 Markdown + JSONL，跨 AI agent 可移植
 
@@ -141,6 +142,15 @@ Haven't opened it in two weeks or a month? When you come back, it helps you pick
 </details>
 
 ### 更新日志
+
+- **v1.7.0**（2026-06-02）：三档排期时间制 + 习惯打卡系统（合并升级）
+  - **三档排期：条数制 → 时间制**。周计划 must/should/could 从"限条数"改为"限时间"：保留周总上限（weekly_est_limit，默认 32h）+ 新增 must/should 时间子上限（默认 15h / 建议 8h）+ could 纯弹性不设上限
+  - 数字都不写死，首次排期 AI 引导确认后写入 INDEX，用户随时可改；精力档从查死表改为指导层浮动比例
+  - 新增 est 缺失三级兜底（推断 / 问询 / 1h），并明确"排期 est 总量"与"业余深度研究参考"是两个不可混用的口径
+  - **新增习惯打卡系统**（独立于许愿卡）：核心层（硬上限 3 个，每日批量打卡"默认全过，只报例外"）+ 观察层（不限量，只累计不断签）
+  - 旋转门毕业：核心习惯自动化后（~66 天锚点，可拒绝）毕业腾位，仅毕业时发 1 张许愿卡（守"非胡萝卜"哲学）
+  - 与许愿卡 Streak / area ritual 按目的划界；新增 workflow-habit.md、habits.md（懒加载，不增启动负担）
+  - `core 项目 ≤ 3` 约束保持不变（与三档排期是不同维度）
 
 - **v1.5.1**（2026-05-29）：随手反思
   - 新增 `reflections.md` 滚动文件，可随时记录想法/感受/觉察（触发词：记个反思 / 随手反思 / 想到一件事 / 突然想到）

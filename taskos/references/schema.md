@@ -18,6 +18,7 @@
 | **`tasks/done-YYYY-MM.md`** | **标题 + JSONL 区块** |
 | `reviews/YYYY-Www.md` | Markdown + YAML frontmatter（结构化周快照） |
 | `reflections.md` | 标题 + JSONL 区块（随手反思流，v1.5.1 新增） |
+| `habits.md` | 标题 + JSONL 区块（习惯打卡，v1.7.0 新增，懒加载） |
 
 ---
 
@@ -220,6 +221,7 @@ strategy_phase: 1
 | 周频仪式型 | `r-YYYY-Www-NNN` | `r-2026-W19-001` |
 | 月频仪式型 | `r-YYYY-MM-NNN` | `r-2026-05-001` |
 | 随手反思（v1.5.1） | `refl-YYYYMMDD-NNN` | `refl-20260529-001` |
+| 习惯（v1.7.0） | `h-YYYYMMDD-NNN` | `h-20260602-001` |
 
 **ID 唯一性保证**：每次新建 ID 时，AI 必须扫描以下源以确认 NNN 序号唯一：
 - `tasks/active.md`
@@ -242,9 +244,14 @@ current_week: 2026-W19
 energy_this_week: normal               # 本周精力状态（high / normal / low）
 mood_this_week: null                    # v1.5.0 新增：本周情绪底色（null / 平稳 / 有动力 / 焦虑 / 疲惫 / 低落 / 烦躁 / 自由文本）
 work_hours_this_week: 42               # v1.2.5 新增：本周全职工时（小时），每次开周计划时更新
-weekly_est_limit: 12h                  # 每周工作量软上限（用户可设）
+weekly_est_limit: 32h                 # 每周工作量软上限（周总上限，用户可设；旧默认 12h）
 weekly_est_limit_source: auto          # v1.2.5 新增：auto = AI 双锚点推荐 | manual = 用户手动设定
-data_schema: 1.5.0                     # 当前数据 schema 版本（随手反思 v1.5.1 为行为增强，新增独立 reflections.md，无 INDEX 字段变更）
+weekly_tier_limits:                    # v1.6.0 新增：三档排期时间子上限
+  must: 15h                            # 核心(must)档时间上限，默认建议 15h，用户可改
+  should: null                         # should 档上限；null = 未确认，首次排期 AI 引导确认（建议初值 8h）
+  could: null                          # 固定 null = 不设上限（纯弹性，仅受周总上限兜底）
+tier_limits_source: default            # v1.6.0 新增：default = 用户未走过首次引导确认（AI 用建议值临时排）| manual = 已确认
+data_schema: 1.7.0                     # 当前数据 schema 版本（v1.6.0 三档时间制 + v1.7.0 习惯系统）
 last_value_audit: null                 # v1.5.0 新增：上次价值对齐审计日期（YYYY-MM-DD）
 proactive:                             # v1.2 新增：主动规划开关
   nudge: on                            # on | off
@@ -281,6 +288,11 @@ proactive:                             # v1.2 新增：主动规划开关
 ## Nudge 冷却（v1.2 新增）
 - core_stall_「项目名」: 2026-W21
 - carry_high: 2026-W22
+
+## Habits 概览（v1.7.0 新增）
+- 核心层: 2/3
+- 观察层: 5
+- 本周毕业: 0
 ```
 
 ### INDEX 写入规则
@@ -293,6 +305,8 @@ proactive:                             # v1.2 新增：主动规划开关
 - weekly plan 时刷新 `energy_this_week`（用户回答精力状态后写入：high / normal / low）
 - weekly plan 时刷新 `mood_this_week`（用户回答情绪底色后写入，跳过则写 null）
 - weekly plan 时刷新 `work_hours_this_week`（用户回答本周全职工时后写入，v1.2.5 新增）
+- weekly plan 时如用户首次确认或调整三档时间额度，刷新 `weekly_tier_limits` + `tier_limits_source`（v1.6.0 新增）
+- 习惯写操作（创建/打卡/毕业/层间流转）顺带刷新 `## Habits 概览` 段；**此段不纳入强制规则 #3 的必刷范围**（漏刷不影响数据安全，habits.md JSONL 可现算），v1.7.0 新增
 - weekly review 结束时刷新 `last_full_rebuild` 并完整重建 INDEX
 - 价值对齐审计完成后刷新 `last_value_audit` 为今天日期
 - Tasks Pool 概览中的统计数据（active 总数、by_project 等）在每次刷新 INDEX 时从 active.md JSONL 行直接计算
@@ -358,6 +372,10 @@ proactive:                             # v1.2 新增：主动规划开关
 | `nudge-韧性-拒绝` | 韧性检测被拒绝 | 冷却 2 周内不再提醒（v1.2.3） |
 | `nudge-留白` | 探索空间提醒已发出 | 冷却 4 周内不再提醒（v1.2.3） |
 | `profile-workload-update` | AI 自动更新了 profile 工作量基线 | 月度校准或用户告知全职变化时（v1.2.5） |
+| `reflect` | 随手反思记录 | 用户原话追加 reflections.md（v1.5.1） |
+| `habit-create` | 创建习惯 | 新建核心层/观察层习惯（v1.7.0） |
+| `habit-checkin` | 习惯打卡 | 单个或批量打卡（批量走单次事务）（v1.7.0） |
+| `habit-graduate` | 核心习惯毕业 | 自动化毕业移出核心层 + 发 1 张许愿卡（v1.7.0） |
 
 ### 崩溃恢复规则
 
@@ -803,3 +821,59 @@ challenge_status: null
 ### 与周复盘的关系
 
 周复盘微反思环节读取 `week == current_week` 的散记，汇总进当周快照 `## 本周反思` 段（正文用 `[随手]` 前缀标注，非数据字段）。汇总后散记**保留**在 reflections.md，不删除。详见 workflow-weekly.md 与 workflow-reflect.md。
+
+---
+
+## 十五、习惯打卡数据格式（habits.md）（v1.7.0 新增）
+
+### 文件路径
+
+`${TASKOS_ROOT}/habits.md`（懒加载——启动不读、不进启动三计数校验）
+
+### 整体结构
+
+```markdown
+# Habits
+## ~~~ JSONL 区块开始 ~~~
+{"id":"h-20260602-001","name":"喝够2L水","layer":"core","status":"active","streak":12,"best_streak":15,"total":48,"last_checkin":"2026-06-02","created":"2026-05-01"}
+{"id":"h-20260602-002","name":"拉伸","layer":"watch","status":"active","streak":null,"best_streak":null,"total":7,"last_checkin":"2026-06-01","created":"2026-05-10"}
+## ~~~ JSONL 区块结束 ~~~
+```
+
+### 行格式
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `id` | string | ✅ | `h-YYYYMMDD-NNN` |
+| `name` | string | ✅ | 习惯名 |
+| `layer` | string | ✅ | `core`（核心层，硬上限 3 个）/ `watch`（观察层，不限量） |
+| `status` | string | ✅ | `active` / `graduated`（已毕业）/ `dropped`（放弃） |
+| `streak` | number \| null | ✅ | 当前连续天数；**观察层恒为 null**（不计连续） |
+| `best_streak` | number \| null | ✅ | 历史最高连续；观察层恒为 null |
+| `total` | number | ✅ | 累计打卡总次数（两层都计） |
+| `last_checkin` | string \| null | ✅ | 上次打卡日期（YYYY-MM-DD） |
+| `created` | string | ✅ | 创建日期（YYYY-MM-DD） |
+
+> 字段精简：不预留"以后可能用"的字段，JSONL 向后兼容需要时零成本加。
+
+### 单习惯打卡时的字段更新（核心层与观察层共用）
+
+- `total += 1`、`last_checkin → 今天`
+- 核心层额外：先做断签检测——`今天 − last_checkin > 1 天` → 中断（`streak` 归 0），否则 `streak += 1`；本次打卡后核心层 `streak` 至少为 1；如 `streak > best_streak` 则 `best_streak = streak`
+- 观察层：`streak / best_streak` 恒为 null，不动
+
+### 操作规则
+
+- JSONL 操作规则同 tasks/active.md（区块边界固定、每行合法 JSON 占满一行、改字段=整行重构替换、坏行跳过 + journal [align]）
+- 写操作走 journal（`[habit-create]` / `[habit-checkin]` / `[habit-graduate]`）
+- **仅刷新 INDEX `## Habits 概览` 段**，不纳入强制规则 #3 必刷范围（漏刷不影响数据安全）
+- ID 唯一性：新建时扫描 habits.md 当天已有的 `h-YYYYMMDD-NNN`，NNN 从 001 起递增
+- 文件不存在时首次创建（标题 + 空 JSONL 区块）
+
+### 核心约束与边界
+
+- 核心层 `status==active && layer==core` 数量硬上限 **3 个**（超出 AI 提醒但不强拦）
+- 观察层不限量、永不断签（只累计 total）
+- 批量打卡（"打卡"指令）只作用核心层；观察层靠用户顺口提及单独累计
+- 与许愿卡 Streak / area ritual 按目的划界（详见 workflow-habit.md）
+- 仅核心习惯毕业时发 1 张许愿卡（source: "habit-graduate"，rewards/ 不存在则跳过）

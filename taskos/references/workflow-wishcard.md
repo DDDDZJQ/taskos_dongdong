@@ -167,6 +167,21 @@
 
 ---
 
+## 四·五、习惯毕业奖励（v1.7.0，与习惯系统联动）
+
+习惯打卡系统（workflow-habit.md）独立于 Streak，但有**唯一一个**接触点：**核心习惯毕业时发 1 张许愿卡**作里程碑庆祝。
+
+- 触发：核心层习惯毕业（status → graduated，详见 workflow-habit.md §七）
+- 动作：自动 earn 1 张，`source: "habit-graduate"`，reason 写习惯名（如"『喝水』养成毕业"）
+- ledger 行示例：`{"id":"wc-...","type":"earn","amount":1,"reason":"『喝水』养成毕业","source":"habit-graduate","date":"YYYY-MM-DD"}`
+- journal：`[时间] #op done | wish-card-earn +1 "habit-graduate:喝水"`
+- **rewards/ 目录不存在**（用户没用许愿卡）→ 毕业时跳过发卡，仅文字祝贺，不阻塞
+- **日常习惯打卡不发卡**（守"非胡萝卜"哲学，避免外部奖励侵蚀内在动机）
+
+> earn source 枚举（v1.7.0）：`direct` / `bounty` / `streak` / `challenge` / `habit-graduate`
+
+---
+
 ## 五、许愿清单
 
 ### 添加
