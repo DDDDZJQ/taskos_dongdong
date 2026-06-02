@@ -32,7 +32,7 @@ taskos/                         咚咚 · 个人任务管理 Skill
 
 基于「领域/项目/任务」三层 SOP 的通用个人任务管理 skill。
 
-- 版本：v1.7.1
+- 版本：v1.8.0
 - 兼容：Claude Code / Cursor / OpenClaw / WorkBuddy 等支持 Anthropic 风格 skill 的 agent
 - 数据格式：纯 Markdown + JSONL，跨 AI agent 可移植
 
@@ -142,6 +142,12 @@ Haven't opened it in two weeks or a month? When you come back, it helps you pick
 </details>
 
 ### 更新日志
+
+- **v1.8.0**（2026-06-02）：Streak 退役 + 启动减负 + bug 修正（减法升级）
+  - **许愿卡 Streak 退役**：连续打卡能力存在两套近乎同构的引擎（许愿卡 Streak 与习惯核心层），收敛为一套。连续追踪统一由习惯系统承接，"连续达成攒卡"由悬赏（bounty）承接，"打卡"触发词不再有归属歧义。许愿卡子系统 5→4，重复性事项机制 3→2（习惯/ritual）
+  - **启动行为压缩**：从 11 步无条件执行 → 3 步必做硬地板（读 INDEX / 崩溃恢复 / current_week 比对）+ 7 项按需触发（无信号静默跳过），显著降低每次启动的 AI 负担，能力零损失
+  - **bug 修正**：① 启动计数校验公式补上 Strategy 段（原只算 Core+Normal+Side 三段，导致有 strategy 项目时每次误报漂移）；② SKILL.md 参考路由"14 项"→"13 项"（与 healthcheck 一致）；③ weekly_est_limit_source 示例统一为 manual
+  - 迁移轻量幂等（streaks.md 退役处理：不存在则无操作 / 有数据则询问转习惯或归档，不删数据），data_schema 升 1.8.0
 
 - **v1.7.1**（2026-06-02）：文档中文化 + 默认中文对话 + 核查项修复
   - **默认中文对话**：强制规则新增第 9 条——除非用户当前对话明确要求换语言，否则一律用简体中文交互（仅约束对话语言，不影响数据文件中必须保留的英文）

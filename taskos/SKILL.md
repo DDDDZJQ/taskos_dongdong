@@ -3,7 +3,7 @@ name: dongdong
 description: "咚咚——通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
-version: 1.7.1
+version: 1.8.0
 license: MIT
 metadata:
   category: productivity
@@ -155,60 +155,55 @@ TASKOS_ROOT: ~/TaskOS
 - "打卡" / "习惯打卡" / "加个习惯" / "新习惯" / "我的习惯" / "习惯毕业" / "升到核心层" / "降到观察层"
 - "许愿卡" / "奖励自己" / "给自己发卡" / "消耗许愿卡" / "兑换"
 - "设悬赏" / "完成悬赏" / "许愿想xxx" / "奖励清单" / "看看许愿清单"
-- "打卡" / "连续纪录" / "本周挑战" / "接受挑战" / "拒绝挑战" / "挑战完成了"
+- "本周挑战" / "接受挑战" / "拒绝挑战" / "挑战完成了"
 - "许愿卡历史" / "奖励记录" / "余额多少"
 
 ---
 
 # 启动行为（每次调用 skill 都跑）
 
-按顺序执行：
+启动分两层：**3 步必做硬地板**（每次都跑，关乎数据一致性与时间线）+ **7 项按需触发**（命中条件才跑，无信号静默跳过，不必每次显式走查汇报）。
 
-1. 检查 `${TASKOS_ROOT}` 是否存在
-   - 不存在 → 询问用户是否初始化
-   - 用户同意 → 创建空骨架（详见末尾"初始化"段）
+## 必做 · 每次（3 步硬地板）
 
-2. 全量读 `INDEX.md` 加载到上下文
+1. **读 `INDEX.md`** 全量加载到上下文（强制规则 #1 的落地；不允许靠记忆/缓存）
 
-3. **轻量计数校验**（替代 fingerprint）：
-   - active.md JSONL 行数 vs INDEX `active 总数`
-   - `areas/` 目录下 .md 文件数 vs INDEX 列出的 area 数
-   - `projects/active/` 目录下 .md 文件数 vs INDEX 中 Core + Normal + Side 三段的项目数总和
-   - 任一不一致 → 提示用户"INDEX 可能漂移，建议立即重建"，并询问是否当场重建
+2. **崩溃恢复检测**：检查 `.journal.md` 末尾是否有未配对 `[in_progress]`
+   - 有 → 主动告知用户处理方式（A 继续 / B 回滚 / C 标记已完成，详见强制规则 #4）
+   - 这是**最高优先级**阻塞项
 
-4. 检查 `.journal.md` 末尾是否有未配对 `[in_progress]`
-   - 有 → 告知用户处理方式（详见强制规则 #4）
-
-5. 比对 `INDEX.current_week` 与今天的 ISO 周（用日期计算）
+3. **current_week 比对**：与今天的 ISO 周比对（用日期计算，不能字符串递增）
    - 不一致 → **先自动保存上周最小快照**（详见"自动最小快照"段）→ 再主动询问"要不要现在开周计划？"
    - 用户同意 → 进入 weekly plan 工作流
    - 用户拒绝 → AI 自动只更新 INDEX.current_week 为今天 ISO 周，刷新 Tasks Pool 概览计数（走 journal）
 
-6. 检查 `.journal.md` 是否需要月度归档
-   - 最早记录早于本月 → 切到 `.journal-YYYY-MM.md`，当月留在 `.journal.md`
+## 按需 · 命中条件才跑（无信号静默跳过）
 
-7. 懒人模式检测
-   - 计算今天 - INDEX.last_weekly_plan
-   - > 7 天 → 标记下次 weekly plan 走对齐流程（详见 workflow-weekly.md）
+| # | 检查 | 触发条件（否则跳过） |
+|---|------|---------------------|
+| A | `${TASKOS_ROOT}` 不存在 → 询问初始化（详见末尾"初始化"段） | 仅首次使用时 |
+| B | **轻量计数校验**（替代 fingerprint） | 本会话对 active/projects/areas 做过写操作，或用户主动质疑数据时 |
+| C | `.journal.md` 月度归档（最早记录早于本月 → 切到 `.journal-YYYY-MM.md`） | 通常仅月初命中一次 |
+| D | 读取 `${TASKOS_ROOT}/profile.md` 加载到上下文 | 本次交互需用到画像（排期/认识你/资源研究）时 |
+| E | **Nudge 扫描**（详见下方"Nudge 扫描"段） | INDEX.proactive.nudge == on 且 active.md 非空且有信号 |
+| F | **Strategy 季度检视提醒** | INDEX.proactive.strategy == on 且有 active strategy 且 last_reviewed > 3 个月 |
+| G | **Profile 冷启动检测**（profile.md 不存在或 completeness < 0.3 → 标记待发起"认识你"） | 最低优先级，延迟到当次交互结束后再发起 |
 
-8. 读取 `${TASKOS_ROOT}/profile.md`（如存在，加载到上下文供后续使用）
+**轻量计数校验（B）内容**：
+- active.md JSONL 行数 vs INDEX `active 总数`
+- `areas/` 目录下 .md 文件数 vs INDEX 列出的 area 数
+- `projects/active/` 目录下 .md 文件数 vs INDEX 中 **Core + Normal + Side + Strategy 四段**的项目数总和（⚠️ 必须含 Strategy 段——strategy 项目也存放在 projects/active/，漏算会每次误报漂移）
+- 任一不一致 → 提示用户"INDEX 可能漂移，建议立即重建"，并询问是否当场重建
 
-9. **Nudge 扫描**（如 INDEX.proactive.nudge == on）：
-   - 先清理 INDEX 中过期的 nudge 冷却项（冷却周 < current_week）
-   - 扫描条件（按优先级，最多 2 条）：
-     a. core 项目停滞：连续 2 周 progress 未变（对比最近 2 个周快照；快照 < 2 个时跳过）
-     b. carry ≥ 3 堆积：active.md 中 carry >= 3 的任务
-     c. 上下文分布失衡：单一 context 占比 > 60%
-     d. 任务池空档：active.md 中 due_week == 本周 且 status != "blocked" 的任务 < 3 条
-   - active.md 为空 → 跳过全部 nudge
-   - 输出建议（朋友式语气，一句话）；用户响应后走 journal [nudge]
-
-10. **Strategy 季度检视提醒**（如 INDEX.proactive.strategy == on）：
-    - 检查 projects/active/ 中 type: strategy 的文件
-    - 如有 active strategy 且 last_reviewed 超过 3 个月 → 温和提醒
-
-11. **Profile 冷启动检测**：
-    - profile.md 不存在 或 frontmatter completeness < 0.3 → 标记待发起"认识你"对话
+**Nudge 扫描（E）内容**：
+- 先清理 INDEX 中过期的 nudge 冷却项（冷却周 < current_week）
+- 扫描条件（按优先级，最多 2 条）：
+  a. core 项目停滞：连续 2 周 progress 未变（对比最近 2 个周快照；快照 < 2 个时跳过）
+  b. carry ≥ 3 堆积：active.md 中 carry >= 3 的任务
+  c. 上下文分布失衡：单一 context 占比 > 60%
+  d. 任务池空档：active.md 中 due_week == 本周 且 status != "blocked" 的任务 < 3 条
+- active.md 为空 → 跳过全部 nudge
+- 输出建议（朋友式语气，一句话）；用户响应后走 journal [nudge]
 
 ---
 
@@ -310,7 +305,7 @@ d. 用户最终 override（说"我坚持"）→ 写入但 journal 标记 [gateke
 | 执行迁移 / 升级数据 / 数据迁移 | references/migration.md |
 | 帮我规划 / 制定计划 / 路线图 / 长期目标 / 更新路线图 / 检视进度 / 搜索资源 | references/workflow-strategy.md |
 | 认识我 / 更新画像 / 我的画像 | 直接读写 profile.md（无独立工作流文件） |
-| 许愿卡 / 奖励自己 / 打卡 / 连续纪录 / 悬赏 / 挑战 / 兑换 / 许愿 / 余额 | references/workflow-wishcard.md |
+| 许愿卡 / 奖励自己 / 悬赏 / 挑战 / 兑换 / 许愿 / 余额 | references/workflow-wishcard.md |
 
 ---
 
@@ -375,7 +370,7 @@ d. 用户最终 override（说"我坚持"）→ 写入但 journal 标记 [gateke
 
 # 自动最小快照
 
-**触发条件**：启动行为步骤 5 中，检测到 `current_week` 需要切换时。
+**触发条件**：启动行为必做第 3 步（current_week 比对）中，检测到 `current_week` 需要切换时。
 
 **动作**：
 1. 读 active 所有项目的 progress/risk
@@ -453,14 +448,14 @@ key_milestones（可选）触发：
 - `references/schema.md` — 完整数据模型 + JSONL 操作规则 + INDEX 格式 + ID 规范
 - `references/workflow-capture.md` — 捕获分层 + inbox 整理详细 SOP
 - `references/workflow-reflect.md` — 随手反思（记录想法到 reflections.md + 与 capture 区分）
-- `references/workflow-habit.md` — 习惯打卡（核心层/观察层分层 + 批量打卡 + 旋转门毕业 + 与 Streak/ritual 划界）
+- `references/workflow-habit.md` — 习惯打卡（核心层/观察层分层 + 批量打卡 + 旋转门毕业 + 与 ritual 划界；v1.8.0 起为唯一连续打卡引擎）
 - `references/workflow-weekly.md` — 周计划 + 周复盘 + 风险模型 + 完整性扫描
 - `references/workflow-rename.md` — 重命名工作流 + 旧名历史保留
 - `references/workflow-retrospect.md` — 手动复盘（从周快照实时生成趋势分析）
 - `references/workflow-strategy.md` — Strategy 工作流（路线图创建/研究/检视/调整）
-- `references/workflow-healthcheck.md` — 全面核查一键指令（14 项检查清单）
+- `references/workflow-healthcheck.md` — 全面核查一键指令（13 项检查清单）
 - `references/workflow-cleanup.md` — 数据瘦身一键指令（5 步流程）
-- `references/workflow-wishcard.md` — 许愿卡奖励系统（获取/消耗/悬赏/打卡/挑战/历史）
+- `references/workflow-wishcard.md` — 许愿卡奖励系统（获取/消耗/悬赏/挑战/许愿清单/历史）
 - `references/migration.md` — Skill 更新迁移指引
 
 模板在 `templates/`：
@@ -591,8 +586,8 @@ proactive:
 
 # 版本与维护
 
-- 当前版本：v1.7.1（v1.7.0 习惯打卡系统基础上：文档中英文梳理中文化 + 默认中文对话规则 + healthcheck.md 内部一致性修复）
-- 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植 + 主动推动但不越权 + 严格准入 + 游戏化正向激励 + 心理增强（恢复/进展/情绪/反思/决策/价值）+ 习惯养成（分层/批量打卡/旋转门毕业）
+- 当前版本：v1.8.0（v1.7.1 基础上：许愿卡 Streak 退役并入习惯系统 + 启动行为压缩为 3 必做+7 按需 + 启动校验/文档项数/示例三处 bug 修正；机制收敛减负，data_schema 升 1.8.0）
+- 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植 + 主动推动但不越权 + 严格准入 + 游戏化正向激励 + 心理增强（恢复/进展/情绪/反思/决策/价值）+ 习惯养成（分层/批量打卡/旋转门毕业）+ 持续减法体检（发现冗余即收敛）
 - 已通过多轮严格审核，零 P0 / P1 漏洞
 
 如果在使用过程中发现实战问题，请：

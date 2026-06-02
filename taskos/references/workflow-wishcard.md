@@ -8,10 +8,11 @@
 - "许愿卡" / "奖励自己" / "给自己发卡" / "消耗许愿卡" / "兑换"
 - "设悬赏" / "完成悬赏" / "目标悬赏"
 - "许愿想xxx" / "加个奖励" / "奖励清单" / "看看许愿清单"
-- "打卡" / "连续纪录" / "streak" / "今天xxx了"（匹配已有连续纪录时）
 - "本周挑战" / "接受挑战" / "拒绝挑战" / "挑战完成了"
 - "许愿卡历史" / "奖励记录" / "余额多少"
 ```
+
+> 连续打卡能力已于 v1.8.0 退役（原 Streak 子系统），统一由习惯系统（workflow-habit.md）承接。"打卡"触发词路由到习惯系统，不再进入许愿卡。
 
 ---
 
@@ -43,7 +44,6 @@
 | 消耗 N 张 / 兑换 xxx | → 消耗 | ledger.md (+wishlist.md) |
 | 设悬赏 | → 创建悬赏 | bounties.md |
 | 完成悬赏 | → 兑现悬赏 | bounties.md + ledger.md |
-| 打卡 / 今天 xxx 了 | → 打卡 | streaks.md (+ledger.md) |
 | 许愿想 xxx | → 添加 wishlist | wishlist.md |
 | 接受/拒绝挑战 | → 挑战响应 | challenges.md |
 | 挑战完成了 | → 完成挑战 | challenges.md + ledger.md |
@@ -125,51 +125,9 @@
 
 ---
 
-## 四、连续纪录（Streak）
+## 四、习惯毕业奖励（v1.7.0，与习惯系统联动）
 
-### 创建连续纪录
-
-1. 用户说"我要开始记录连续 xxx"
-2. 读 streaks.md
-3. 生成 ID：`s-YYYYMMDD-NNN`
-4. 确定 freq（daily/weekly）和 milestones（使用默认或用户指定）
-5. append 新行（current_count: 0, status: "active"）
-6. journal：`[时间] #op done | streak-create "xxx"`
-
-### 打卡
-
-1. 用户说"今天 xxx 了" / "打卡 xxx"
-2. 读 streaks.md，模糊匹配 name
-3. **中断检查**：
-   - daily：今天 - last_checkin > 1 天？
-   - weekly：last_checkin 不在本周或上周？
-   - 中断 → current_count 归零，status → "broken"
-     - 告知用户："连续纪录中断了（之前连续 N 天）。要重新开始吗？"
-     - 用户说是 → status → "active"，journal [streak-restart]
-     - 用户说不 → 保持 broken
-   - 未中断 → 继续
-4. 更新：`current_count += 1`，`last_checkin → 今天`
-5. 如 `current_count > best_count` → `best_count = current_count`
-6. **里程碑检查**：`current_count == next_milestone`？
-   - 是 → 自动 earn（source: "streak"）；更新 next_milestone 到下一个；如有关联悬赏也兑现
-   - 否 → 不额外操作
-7. 更新 INDEX：`active_streaks` = streaks 中 status == "active" 的数量
-8. journal：`[时间] #op done | streak-checkin "xxx" count:N`
-
-### 里程碑奖励
-
-| 第几个里程碑 | 奖励 |
-|-------------|------|
-| 第 1 个 | 1 张 |
-| 第 2 个 | 2 张 |
-| 第 3 个 | 3 张 |
-| 第 4+ 个 | 3 张（封顶） |
-
----
-
-## 四·五、习惯毕业奖励（v1.7.0，与习惯系统联动）
-
-习惯打卡系统（workflow-habit.md）独立于 Streak，但有**唯一一个**接触点：**核心习惯毕业时发 1 张许愿卡**作里程碑庆祝。
+习惯打卡系统（workflow-habit.md）独立运作，但有**唯一一个**与许愿卡的接触点：**核心习惯毕业时发 1 张许愿卡**作里程碑庆祝。
 
 - 触发：核心层习惯毕业（status → graduated，详见 workflow-habit.md §七）
 - 动作：自动 earn 1 张，`source: "habit-graduate"`，reason 写习惯名（如"『喝水』养成毕业"）
@@ -178,7 +136,9 @@
 - **rewards/ 目录不存在**（用户没用许愿卡）→ 毕业时跳过发卡，仅文字祝贺，不阻塞
 - **日常习惯打卡不发卡**（守"非胡萝卜"哲学，避免外部奖励侵蚀内在动机）
 
-> earn source 枚举（v1.7.0）：`direct` / `bounty` / `streak` / `challenge` / `habit-graduate`
+> earn source 枚举（v1.8.0）：`direct` / `bounty` / `challenge` / `habit-graduate`
+>
+> **v1.8.0 变更**：原 Streak 连续纪录子系统已退役。想追踪"连续达成攒卡"的需求，用悬赏（bounty）承接——设一个"连续 X 天完成 Y → 奖励 N 张"的悬赏，达成后手动声明完成发卡。连续天数本身由习惯系统的核心层 `streak` 字段追踪。
 
 ---
 
@@ -243,15 +203,14 @@
 本月获取：+N 张
   直接获取    ×A（具体原因列举）
   完成悬赏    ×B
-  连续纪录    ×C
-  每周挑战    ×D
+  每周挑战    ×C
+  习惯毕业    ×D
 
 本月消耗：-M 张
   具体消耗列举
-
-连续纪录状态：
-  xxx：连续 N 天（历史最高 M 天）
 ```
+
+> 习惯连续天数查询走习惯系统（"我的习惯"，见 workflow-habit.md），不在许愿卡月报中。
 
 ---
 
@@ -266,7 +225,6 @@
 - rewards/ledger.md（流水账）
 - rewards/bounties.md（目标悬赏）
 - rewards/wishlist.md（许愿清单，初始为空）
-- rewards/streaks.md（连续纪录）
 - rewards/challenges.md（每周挑战）
 - INDEX.md 新增 Wish Cards 段（余额 0）
 
@@ -281,7 +239,7 @@
 ## ~~~ JSONL 区块结束 ~~~
 ```
 
-（bounties/streaks/challenges 同理）
+（bounties/challenges 同理）
 
 wishlist 初始化为：
 ```markdown
@@ -296,7 +254,6 @@ INDEX 新增：
 wish_cards_balance: 0
 wish_cards_earned_total: 0
 wish_cards_spent_total: 0
-active_streaks: 0
 current_challenge: null
 challenge_status: null
 ```
@@ -312,9 +269,8 @@ journal：`[时间] #op done | wish-card-system-init`
 3. **流水 append-only** — 不删除记录；修正用 `type: "adjust"`
 4. **所有写操作走 journal**
 5. **整数单位** — amount 只接受正整数
-6. **中断判定在打卡时** — 不在启动时主动扫描
-7. **ID 唯一性** — 各类 ID 在各自文件内全局唯一
-8. **懒加载** — rewards 文件只在用户触发或周复盘时读取
+6. **ID 唯一性** — 各类 ID 在各自文件内全局唯一
+7. **懒加载** — rewards 文件只在用户触发或周复盘时读取
 
 ---
 

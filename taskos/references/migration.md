@@ -128,7 +128,7 @@
 > 所有验证通过。
 
 ### 已是最新版本
-> 当前数据 schema 已与 skill 版本一致（最新为 1.7.0），无需迁移。
+> 当前数据 schema 已与 skill 版本一致（最新为 1.8.0），无需迁移。
 
 ---
 
@@ -703,5 +703,72 @@
 | 数据锚点（字段/枚举/ID/文件名/journal 标记/INDEX 段标题）未被误改 | ✅ |
 | workflow-healthcheck.md 项数全文一致为 13 项 | ✅ |
 | INDEX.data_schema | == "1.7.0"（不变） |
+
+全部通过 → 向用户确认"迁移完成"。
+
+---
+
+### v1.8.0（从 v1.7.1 升级）
+
+#### 性质
+
+机制收敛 + 减负 + bug 修正。涉及 INDEX 字段删除（`active_streaks`）与可选文件退役（`rewards/streaks.md`），故 data_schema 升 1.8.0。**不破坏 active 中央池；迁移轻量幂等。**
+
+#### 变更内容
+
+1. **许愿卡 Streak 退役**：删除连续纪录子系统（streaks.md + 工作流）。连续打卡能力统一由习惯系统（habits.md）承接；"连续达成攒卡"由悬赏（bounty）承接；"打卡"触发词统一路由习惯系统。
+   - earn `source` 枚举删除 `streak`（保留 `direct/bounty/challenge/habit-graduate`）
+   - Bounties `auto_detect` 枚举删除 `"streak:s-ID"`
+   - ID 规范删除 `s-YYYYMMDD-NNN`
+   - INDEX Wish Cards 段删除 `active_streaks`
+   - journal 标记删除 `streak-create/streak-checkin/streak-restart`
+2. **启动行为压缩**：11 步 → 3 步必做硬地板（读 INDEX / 崩溃恢复 / current_week 比对）+ 7 项按需触发（无信号静默跳过）。能力零损失。
+3. **bug 修正**：
+   - 启动计数校验公式加 Strategy 段（原 Core+Normal+Side 三段，导致有 strategy 项目时每次误报漂移）
+   - SKILL.md 参考路由"14 项"→"13 项"（与 healthcheck 一致）
+   - `weekly_est_limit_source` 示例统一为 manual
+
+#### 一次性迁移动作（手动触发，幂等）
+
+```
+1. rewards/streaks.md 处理：
+   - 不存在 → 无操作（绝大多数情况）
+   - 存在但 JSONL 区块为空 → 删除该文件，journal [align]
+   - 存在且有 active 连续纪录 → 询问用户：
+     "连续纪录功能已退役并入习惯系统。你有 N 条连续纪录，
+      建议转成习惯核心层（保留连续天数），或设成悬赏。要怎么处理？"
+     · 转习惯 → habits.md 建对应核心层习惯（streak←current_count，
+       best_streak←best_count，total 估为 current_count），journal [habit-create]
+     · 设悬赏 / 不要了 → 归档 streaks.md 到 rewards/archive/（不删数据）
+2. INDEX Wish Cards 段删除 active_streaks 行（若存在）
+3. data_schema → 1.8.0
+```
+
+> 多数用户从未初始化 streaks.md，步骤 1 通常无操作。归档不删数据。
+
+#### 行为变更（升级 skill 文件后自动生效）
+
+- "打卡"统一进习惯系统，不再触发许愿卡 Streak
+- 启动从 11 步无条件 → 3 步必做 + 7 项按需触发
+- 启动计数校验含 Strategy 段，不再误报漂移
+- 周复盘许愿卡结算不含 streak（本就只读 bounty/challenge/ledger）
+
+#### 验证清单
+
+| 检查项 | 预期 |
+|--------|------|
+| SKILL.md version | == "1.8.0" |
+| SKILL.md 启动行为为"3 必做 + 7 按需"结构 | ✅ |
+| SKILL.md 启动计数校验含 Strategy 段（四段） | ✅ |
+| SKILL.md 参考路由"全面核查"为 13 项 | ✅ |
+| SKILL.md 触发场景/路由无 streak 专属词、"打卡"仅归习惯 | ✅ |
+| workflow-wishcard.md 无"连续纪录（Streak）"段、earn source 无 streak | ✅ |
+| workflow-habit.md 划界表为 2 行、无"与 Streak 消歧"段 | ✅ |
+| schema.md 文件清单无 streaks.md、无 Streaks 行格式表、无 s- ID、无 active_streaks | ✅ |
+| schema.md Bounties auto_detect 无 "streak:s-ID" | ✅ |
+| schema.md 启动校验含 Strategy 四段、weekly_est_limit_source 示例 == manual | ✅ |
+| 习惯系统/ritual/强制规则条数（9 条）未被误改 | ✅ |
+| migration.md 含 v1.8.0 段 | ✅ |
+| INDEX.data_schema | == "1.8.0" |
 
 全部通过 → 向用户确认"迁移完成"。

@@ -300,7 +300,7 @@ strategy_phase: 1
 
 ## 季度提醒机制
 
-启动行为步骤 10 中执行：
+启动行为按需项（Strategy 季度检视提醒）中执行：
 
 - 检查 projects/active/ 中所有 `type: strategy` 的文件
 - 如果 `last_reviewed` 距今 > 3 个月 → 温和提醒
