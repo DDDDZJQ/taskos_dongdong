@@ -315,8 +315,8 @@ strategy_phase: 1
 
 | 场景 | 行为 |
 |------|------|
-| Weekly Review 步骤 10 | 展示本周 strategy 子 project 进展关联 |
-| Weekly Plan nudge | 提醒 strategy 子 project 无排期 |
-| Retrospect 末尾 | 提醒 strategy 检视（如过期） |
+| 周复盘步骤 10 | 展示本周 strategy 子 project 进展关联 |
+| 周计划 nudge | 提醒 strategy 子 project 无排期 |
+| 手动复盘末尾 | 提醒 strategy 检视（如过期） |
 | Healthcheck #11 | 检查子 project 引用有效性 |
 | Capture | 如任务关联的 project 有 parent_strategy → 正常处理，无特殊逻辑 |

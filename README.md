@@ -32,7 +32,7 @@ taskos/                         咚咚 · 个人任务管理 Skill
 
 基于「领域/项目/任务」三层 SOP 的通用个人任务管理 skill。
 
-- 版本：v1.7.0
+- 版本：v1.7.1
 - 兼容：Claude Code / Cursor / OpenClaw / WorkBuddy 等支持 Anthropic 风格 skill 的 agent
 - 数据格式：纯 Markdown + JSONL，跨 AI agent 可移植
 
@@ -142,6 +142,12 @@ Haven't opened it in two weeks or a month? When you come back, it helps you pick
 </details>
 
 ### 更新日志
+
+- **v1.7.1**（2026-06-02）：文档中文化 + 默认中文对话 + 核查项修复
+  - **默认中文对话**：强制规则新增第 9 条——除非用户当前对话明确要求换语言，否则一律用简体中文交互（仅约束对话语言，不影响数据文件中必须保留的英文）
+  - **中英文梳理**：文档可中文化的英文叙述统一中文化（章节标题 `Workflow: Xxx` → `工作流：Xxx`、`Mini-Check` → 即时核查、`Recovery Protocol` → 恢复协议等）；数据锚点（字段名/枚举/ID/文件名/journal 标记/INDEX 段标题）按约定保留英文不变
+  - **healthcheck 修复**：全面核查项数全文统一为 13 项，清除历史遗留的"INDEX 当周快照"残留检查
+  - 无数据格式变更，data_schema 保持 1.7.0，老数据零迁移
 
 - **v1.7.0**（2026-06-02）：三档排期时间制 + 习惯打卡系统（合并升级）
   - **三档排期：条数制 → 时间制**。周计划 must/should/could 从"限条数"改为"限时间"：保留周总上限（weekly_est_limit，默认 32h）+ 新增 must/should 时间子上限（默认 15h / 建议 8h）+ could 纯弹性不设上限

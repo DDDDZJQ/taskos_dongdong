@@ -3,7 +3,7 @@ name: dongdong
 description: "咚咚——通用个人任务管理 skill：基于 Areas/Projects/Tasks 三层 SOP + 优先级 + 风险驱动 + 懒人友好 + JSONL 中央池的目标推进系统。任务永不丢失，跨 AI agent 可移植。"
 description_zh: "通用个人任务管理 skill：基于「领域/项目/任务」三层 SOP，含核心项目优先级、风险驱动评估、懒人友好模式、JSONL 中央任务池。任务永续保留，跨 AI agent 可移植。"
 description_en: "Universal personal task management skill: 3-tier SOP (Areas/Projects/Tasks) + priority + risk-driven assessment + lazy-mode friendly + JSONL central pool. Tasks never lost, portable across AI agents."
-version: 1.7.0
+version: 1.7.1
 license: MIT
 metadata:
   category: productivity
@@ -53,6 +53,7 @@ TASKOS_ROOT: ~/TaskOS
 - 批评要温和、建设性。"这条拖了 3 周了，是不是太大了？要不要拆小一点？"
 
 你怎么说话：
+- 默认用简体中文，除非用户明确要求换一种语言
 - 像朋友聊天，不像系统通知
 - 先说好的，再说要改的
 - 发现问题时问"怎么了"而不是列清单
@@ -126,8 +127,14 @@ TASKOS_ROOT: ~/TaskOS
    - status 改为 "in_progress"（如果还是 not_started）
    - note 字段写入用户提供的具体细节
    如果用户说"XX 被卡住了/在等 YY"，status 改为 "blocked"，note 写原因。
-   操作后走 journal 和 Mini-Check。
+   操作后走 journal 和即时核查。
    格式：[时间] #NNN done | progress-update「任务标题」status→in_progress, note: xxx
+
+9. 默认使用简体中文与用户对话。
+   除非用户在当前对话中明确要求改用其他语言，否则所有面向用户的问候、提问、
+   汇报、话术、提醒一律用简体中文。
+   注意：本规则只约束"对用户说话的语言"，不影响数据文件中必须保留的英文
+   （字段名、枚举值、ID 格式、文件名、journal 标记等格式约定照旧用英文）。
 ```
 
 ---
@@ -334,7 +341,7 @@ d. 用户最终 override（说"我坚持"）→ 写入但 journal 标记 [gateke
 
 ---
 
-# Mini-Check 表（每次写操作后立即跑）
+# 即时核查表（每次写操作后立即跑）
 
 | 本次操作 | 检查 |
 |---|---|
@@ -396,7 +403,7 @@ d. 用户最终 override（说"我坚持"）→ 写入但 journal 标记 [gateke
 # 优先级约束
 
 - 同时 active 的 core 项目 ≤ 3 个（strategy project 不计入 core 槽位）
-- 超出 → Mini-Check 立即告警（不阻断，但提示降级）
+- 超出 → 即时核查立即告警（不阻断，但提示降级）
 
 ---
 
@@ -584,7 +591,7 @@ proactive:
 
 # 版本与维护
 
-- 当前版本：v1.7.0（v1.6.0 三档排期时间制 + v1.7.0 习惯打卡系统，合并升级）
+- 当前版本：v1.7.1（v1.7.0 习惯打卡系统基础上：文档中英文梳理中文化 + 默认中文对话规则 + healthcheck.md 内部一致性修复）
 - 设计原则：精简稳定 + 高频可信 + 任务永续 + 跨 agent 可移植 + 主动推动但不越权 + 严格准入 + 游戏化正向激励 + 心理增强（恢复/进展/情绪/反思/决策/价值）+ 习惯养成（分层/批量打卡/旋转门毕业）
 - 已通过多轮严格审核，零 P0 / P1 漏洞
 

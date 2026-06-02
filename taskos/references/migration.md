@@ -589,7 +589,7 @@
 | SKILL.md version | == "1.5.1" |
 | SKILL.md 触发场景含反思触发词 | ✅ |
 | SKILL.md 工作流路由含 workflow-reflect.md | ✅ |
-| SKILL.md Mini-Check 含随手反思行 | ✅ |
+| SKILL.md 即时核查含随手反思行 | ✅ |
 | SKILL.md 参考文件路由含 workflow-reflect.md | ✅ |
 | workflow-reflect.md 存在且含 capture 区分规则 | ✅ |
 | workflow-weekly.md 周复盘含"汇总本周散记"步骤 | ✅ |
@@ -667,5 +667,41 @@
 | workflow-wishcard.md earn source 含 habit-graduate | ✅ |
 | `core 项目 ≤ 3` 约束仍存在且未改 | ✅ |
 | INDEX.data_schema | == "1.7.0" |
+
+全部通过 → 向用户确认"迁移完成"。
+
+---
+
+### v1.7.1（从 v1.7.0 升级）
+
+#### 性质
+
+纯文档维护 + 行为规则补充，**无数据格式变更，无一次性迁移动作**。data_schema 保持 1.7.0。升级 skill 文件即可，老数据零改动。
+
+#### 变更内容
+
+1. **默认中文对话规则**：SKILL.md 强制规则新增第 9 条——默认用简体中文与用户对话，除非用户当前对话明确要求换语言。仅约束对话语言，不影响数据文件中必须保留的英文（字段名/枚举/ID/文件名/journal 标记）。
+2. **中英文梳理**：把文档中可中文化的英文叙述统一中文化——
+   - 各 references 章节标题 `# Workflow: Xxx` → `# 工作流：Xxx`
+   - `Mini-Check` → 即时核查（全 skill 统一）
+   - `Recovery Protocol` → 恢复协议；散文中 `Weekly Plan/Review` 引用 → 周计划/周复盘
+   - **保留英文不变**：数据锚点（字段名、枚举值、ID 格式、文件名、`JSONL/YAML/INDEX`、journal 标记、INDEX 段标题如 `## Nudge 冷却`/`## Strategy Projects`、数据文件标题如 `# Active Tasks`/`# Reflections`/`# Habits`/`# Wish Cards`）
+3. **healthcheck.md 内部一致性修复**：项数全文统一为 13 项；删除历史遗留的"INDEX 当周快照一致性"残留检查（v1.2.4 已移除该段）；步骤/范例/模板同步校正。
+
+#### 行为变更（升级 skill 文件后自动生效）
+
+- AI 默认全程用简体中文与用户交互
+- 文档术语统一，无功能行为变化
+
+#### 验证清单
+
+| 检查项 | 预期 |
+|--------|------|
+| SKILL.md version | == "1.7.1" |
+| SKILL.md 强制规则含第 9 条「默认简体中文对话」 | ✅ |
+| 全 skill 无 `Workflow:` / `Mini-Check` / `Recovery Protocol` 英文残留 | ✅ |
+| 数据锚点（字段/枚举/ID/文件名/journal 标记/INDEX 段标题）未被误改 | ✅ |
+| workflow-healthcheck.md 项数全文一致为 13 项 | ✅ |
+| INDEX.data_schema | == "1.7.0"（不变） |
 
 全部通过 → 向用户确认"迁移完成"。

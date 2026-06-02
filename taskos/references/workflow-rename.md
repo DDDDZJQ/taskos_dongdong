@@ -1,4 +1,4 @@
-# Workflow: Rename（重命名）
+# 工作流：重命名
 
 负责 area / project 的重命名操作，确保所有引用同步更新，同时保留历史 done-*.md 的旧名以维持历史真相。
 
@@ -63,7 +63,7 @@
 [2026-05-10 05:18] #288 align | rename area「心理学」→「临床心理学」, done-*.md 保留旧名
 ```
 
-### 步骤 6：journal [done] + Mini-Check + INDEX 刷新
+### 步骤 6：journal [done] + 即时核查 + INDEX 刷新
 
 ```markdown
 [2026-05-10 05:18] #287 done | rename area「心理学」→「临床心理学」
@@ -89,7 +89,7 @@
 
 ---
 
-## 四、Mini-Check（rename 后立即跑）
+## 四、即时核查（rename 后立即跑）
 
 | 检查项 | 说明 |
 |---|---|
