@@ -8,12 +8,10 @@ deadline: 2026-08-10                 # 必填，必须 ≤ created + 3 个月
 status: active                       # active | paused | done | dropped
 milestone: "（一句话描述里程碑：什么算这个项目完成？）"
 progress: 0.0                        # 0-1，用户主观给（首次创建为 0）
-risk: 🟢                             # 🟢 | 🟡 | 🔴，由 weekly 自动写入
-justification: "___"                 # v1.2.2 必填：通过 Gatekeeper 质询后，简述为什么该项目值得被 TaskOS 管理
+justification: "___"                 # 简述为什么该项目值得被 TaskOS 管理
 
-# 可选：关键里程碑（防温水煮青蛙）
+# 可选：关键里程碑
 # 用 key_milestones 列表罗列必须完成的关键节点
-# 时间过半但全 pending 时风险模型会强制 🔴
 key_milestones:
   - 关键节点 1: pending              # pending | done
   - 关键节点 2: pending
@@ -60,7 +58,6 @@ status: active                            # active | paused | done | dropped
 area: ___                                 # 必填，引用某 area.name
 priority: core                            # core | normal | side（不占用 core ≤ 3 槽位）
 progress: 0.0                             # 按阶段完成数/总阶段数计算（如 2/4=0.50）
-risk: 🟢                                  # 不参与风险模型自动计算，仅手动标注
 ---
 ```
 
