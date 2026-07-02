@@ -1,6 +1,6 @@
 # 工作流：全面核查
 
-一键执行 13 项数据完整性检查，**纯只读操作**，不走 journal，不修改任何文件。
+一键执行数据完整性检查，**纯只读操作**，不走 journal，不修改任何文件。
 
 ---
 
@@ -10,7 +10,7 @@
 
 ---
 
-## 二、核查清单（13 项）
+## 二、核查清单
 
 | # | 检查项 | 数据源 | 说明 |
 |---|--------|--------|------|
@@ -26,7 +26,7 @@
 | 10 | strategy project 子 project 引用有效性 | projects/active/*.md | 所有 parent_strategy 指向的 strategy project 存在且 active |
 | 11 | profile.md 结构完整性 | profile.md | 文件存在、frontmatter 合法（type: user_profile）、completeness 值 0~1 |
 | 12 | nudge 冷却段格式合法性 | INDEX.md | 周编号格式正确（YYYY-Www）、无过期冷却（可建议清理） |
-| 13 | project justification 完整性 | projects/active/*.md | 所有 active project 应有 justification 字段（存量审查前的旧项目豁免） |
+| 13 | project justification 完整性 | projects/active/*.md | 所有 active project 应有 justification 字段
 
 ---
 
