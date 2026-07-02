@@ -128,7 +128,7 @@
 > 所有验证通过。
 
 ### 已是最新版本
-> 当前数据 schema 已与 skill 版本一致（最新为 1.8.0），无需迁移。
+> 当前数据 schema 已与 skill 版本一致（最新为 2.0.0），无需迁移。
 
 ---
 
@@ -770,5 +770,52 @@
 | 习惯系统/ritual/强制规则条数（9 条）未被误改 | ✅ |
 | migration.md 含 v1.8.0 段 | ✅ |
 | INDEX.data_schema | == "1.8.0" |
+
+全部通过 → 向用户确认"迁移完成"。
+
+---
+
+### v2.0.0（从 v1.8.x 升级）
+
+#### 性质
+
+大规模功能删减：聚焦长程项目管理。删除许愿卡奖励系统、习惯打卡系统、Gatekeeper 门禁、随手反思、反思增强 5 个子系统。
+
+#### 删除
+
+- 子系统：许愿卡奖励系统（rewards/）、习惯打卡（habits.md）、Gatekeeper 门禁、随手反思（reflections.md）、反思增强（心理增强层子机制）
+- 文件：`references/workflow-wishcard.md`、`references/workflow-habit.md`、`references/workflow-reflect.md`
+- INDEX 字段：Wish Cards 段、Habits 概览段
+- journal 标记：gatekeeper / gatekeeper-override / reflect / habit-* / wish-card-* / bounty-* / challenge-* / wishlist-add
+- ID 格式：wc- / b- / ch- / refl- / h-
+- 强制规则：9 条→8 条（删除原 #7 Gatekeeper，后续重新编号）
+
+#### 一次性迁移动作（手动触发，幂等）
+
+```
+1. rewards/ 目录 → 若存在则询问是否归档到 rewards_archive/
+2. habits.md → 若存在则询问是否归档
+3. reflections.md → 若存在则询问是否归档
+4. INDEX.md 清理 Wish Cards 段和 Habits 概览段
+5. INDEX.data_schema → 2.0.0
+6. .journal.md：历史记录不动
+```
+
+> 废弃文件均归档不删除。
+
+#### 验证清单
+
+| 检查项 | 预期 |
+|--------|------|
+| SKILL.md version | == "2.0.0" |
+| SKILL.md 无 Gatekeeper 段、强制规则 8 条 | ✅ |
+| SKILL.md 工作流路由无 reflect/habit/wishcard | ✅ |
+| references/ 下无 workflow-wishcard/habit/reflect.md | ✅ |
+| schema.md data_schema == "2.0.0" | ✅ |
+| schema.md 无 rewards/habits/reflections 数据格式 | ✅ |
+| workflow-weekly.md 无许愿卡结算/微反思 | ✅ |
+| workflow-healthcheck.md 13 项精简版 | ✅ |
+| migration.md 含 v2.0.0 段 | ✅ |
+| INDEX.data_schema | == "2.0.0" |
 
 全部通过 → 向用户确认"迁移完成"。
