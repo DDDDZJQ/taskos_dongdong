@@ -819,3 +819,84 @@
 | INDEX.data_schema | == "2.0.0" |
 
 全部通过 → 向用户确认"迁移完成"。
+
+---
+
+### v2.1.0（从 v2.0.0 升级）
+
+#### 性质
+
+大规模功能删减 + 流程合并：删除以周为周期的任务规划方式（周计划/三档排期/风险模型/周快照），合并周复盘/价值审计/路线图检视/画像更新为统一复盘流程。
+
+#### 删除
+
+- **周计划机制**：三档排期（must/should/could）、排期时间制、精力采集、情绪采集、恢复协议自动检测、韧性检测、工作量校准、AI 预排草案、决策合批
+- **风险模型**：gap 公式、温水煮青蛙检测、优先级加权、risk 字段（普通 project + strategy project）
+- **周快照**：reviews/ 目录及其 archive/ 子目录、weekly_snapshot 文件格式
+- **工作流文件**：`references/workflow-weekly.md`、`references/workflow-retrospect.md`、`references/workflow-strategy.md`
+- **Task JSONL 字段**：`due_week`、`tier`、`carry`
+- **Project frontmatter 字段**：`risk`
+- **INDEX 字段**：`last_full_rebuild`、`last_weekly_plan`、`current_week`、`energy_this_week`、`mood_this_week`、`work_hours_this_week`、`weekly_est_limit`、`weekly_est_limit_source`、`weekly_tier_limits`、`tier_limits_source`、`last_value_audit`
+- **强制规则**：8 条 → 7 条（删除原 #5 current_week 比对，后续重新编号）
+- **启动行为**：3 必做 → 2 必做（删除 current_week 比对 + 自动最小快照）
+
+#### 新增
+
+- `references/workflow-review.md`：统一复盘工作流（合并周复盘+价值审计+路线图检视+画像更新+ritual核对+心理增强层）
+
+#### 一次性迁移动作（手动触发，幂等）
+
+```
+1. reviews/ 目录处理：
+   - 若存在 → 询问用户是否归档（建议保留历史数据，归档为 reviews_archive/）
+   - 若不存在 → 无操作
+
+2. tasks/active.md JSONL 行字段清理：
+   - 逐行解析 JSON → 删除 due_week / tier / carry 字段 → 写回
+   - done-YYYY-MM.md 同处理（逐行清理这三个字段）
+
+3. project 文件 risk 字段清理：
+   - 遍历 projects/active/*.md → 删除 frontmatter 中的 risk 行
+   - projects/archive/ 不动（历史记录）
+
+4. INDEX.md 大清理：
+   - 删除 last_full_rebuild / last_weekly_plan / current_week
+   - 删除 energy_this_week / mood_this_week / work_hours_this_week
+   - 删除 weekly_est_limit / weekly_est_limit_source / weekly_tier_limits / tier_limits_source / last_value_audit
+   - 删除「本周排期」「高 carry 任务」「滞留任务」计数行
+   - data_schema → 2.1.0
+
+5. .journal.md：不动历史记录
+```
+
+> 废弃文件均归档不删除。JSONL 行字段清理是破坏性操作——建议在迁移前提醒用户备份。
+
+#### 验证清单
+
+| 检查项 | 预期 |
+|--------|------|
+| SKILL.md version | == "2.1.0" |
+| SKILL.md 强制规则 7 条 | ✅ |
+| SKILL.md 启动行为无 current_week 比对 | ✅ |
+| SKILL.md 工作流路由无 weekly plan 独立行 | ✅ |
+| SKILL.md 初始化 INDEX 模板无周周期字段 | ✅ |
+| SKILL.md 初始化目录结构无 reviews/ | ✅ |
+| references/ 下无 workflow-weekly/retrospect/strategy.md | ✅ |
+| references/ 下有 workflow-review.md | ✅ |
+| schema.md data_schema == "2.1.0" | ✅ |
+| schema.md 目录结构无 reviews/ | ✅ |
+| schema.md 任务字段无 due_week/tier/carry | ✅ |
+| schema.md project 无 risk | ✅ |
+| schema.md 无风险模型章节 | ✅ |
+| schema.md 无周快照规范章节 | ✅ |
+| schema.md INDEX 无 11 个周周期字段 | ✅ |
+| schema.md 启动校验无 current_week | ✅ |
+| workflow-healthcheck.md 12 项 | ✅ |
+| workflow-capture.md 无 carry/due_week/tier | ✅ |
+| workflow-cleanup.md 无 reviews/ 步骤 | ✅ |
+| templates/active-jsonl-line.md 无 carry/due_week/tier | ✅ |
+| templates/project.md 无 risk | ✅ |
+| migration.md 含 v2.1.0 段 | ✅ |
+| INDEX.data_schema | == "2.1.0" |
+
+全部通过 → 向用户确认"迁移完成"。
