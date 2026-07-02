@@ -13,15 +13,12 @@ taskos/                         咚咚 · 个人任务管理 Skill
 │   ├── schema.md               数据模型 + JSONL 操作 + INDEX 格式 + ID 规范
 │   ├── migration.md            版本迁移指引
 │   ├── workflow-capture.md     任务捕获 + inbox 整理
-│   ├── workflow-reflect.md     随手反思
-│   ├── workflow-habit.md       习惯打卡（分层 + 批量打卡 + 旋转门毕业）
 │   ├── workflow-weekly.md      周计划 + 周复盘 + 风险模型
 │   ├── workflow-rename.md      重命名 + 旧名历史保留
 │   ├── workflow-retrospect.md  手动复盘 + 价值对齐审计
 │   ├── workflow-strategy.md    长期路线图（创建/研究/检视/调整）
 │   ├── workflow-healthcheck.md 全面核查（一键体检）
-│   ├── workflow-cleanup.md     数据瘦身
-│   └── workflow-wishcard.md    许愿卡奖励系统
+│   └── workflow-cleanup.md     数据瘦身
 └── templates/                  文件模板
     ├── area.md                 领域模板
     ├── project.md              项目模板
@@ -32,7 +29,7 @@ taskos/                         咚咚 · 个人任务管理 Skill
 
 基于「领域/项目/任务」三层 SOP 的通用个人任务管理 skill。
 
-- 版本：v1.8.0
+- 版本：v2.0.0
 - 兼容：Claude Code / Cursor / OpenClaw / WorkBuddy 等支持 Anthropic 风格 skill 的 agent
 - 数据格式：纯 Markdown + JSONL，跨 AI agent 可移植
 
@@ -60,7 +57,6 @@ taskos/                         咚咚 · 个人任务管理 Skill
 - **心理学支撑**：
   - *自我决定理论*：强调自主性、胜任感和联结感，TaskOS 允许用户按自己节奏推进，通过具体反馈增强胜任感，以诤友式陪伴提供联结。
   - *韧性与恢复*：引入恢复协议和韧性阈值，当系统检测到连续高压或低迷时主动建议降速，保护长期作战能力。
-  - *正向激励*：许愿卡奖励系统借鉴行为强化原理，让"做到了"这件事被看见、被积累，形成可持续的正向循环。
   - *周节律*：研究表明人的精力、注意力和意志力存在周期性波动，以周为单位规划天然贴合这一节律，减少"今天没状态 = 失败"的无谓自责。
 
 方法论搭骨架，以人为中心做内核。
@@ -142,6 +138,13 @@ Haven't opened it in two weeks or a month? When you come back, it helps you pick
 </details>
 
 ### 更新日志
+
+- **v2.0.0**（2026-07-02）：聚焦长程项目管理（大规模功能删减）
+  - **删除 5 个子系统**：许愿卡奖励系统、习惯打卡系统、Gatekeeper 门禁、随手反思、反思增强
+  - **保留核心**：三层 SOP（Areas→Projects→Tasks）、项目管理（core≤3 提醒）、风险模型、三档排期（时间制）、周计划/周复盘、心理增强层 5 机制（恢复协议/进展可视化/情绪觉察/决策疲劳防护/价值对齐审计）
+  - **架构精简**：SKILL.md 触发词 4 类→删除、强制规则 9 条→8 条、工作流路由 12 条→8 条、journal 标记 19 个→10 个、healthcheck 简化为 13 项核心检查
+  - 项目创建改为自由模式（仅保留 core≤3 硬约束提醒，不再做质询）
+  - 迁移：废弃文件归档不删除，data_schema 升 2.0.0
 
 - **v1.8.0**（2026-06-02）：Streak 退役 + 启动减负 + bug 修正（减法升级）
   - **许愿卡 Streak 退役**：连续打卡能力存在两套近乎同构的引擎（许愿卡 Streak 与习惯核心层），收敛为一套。连续追踪统一由习惯系统承接，"连续达成攒卡"由悬赏（bounty）承接，"打卡"触发词不再有归属歧义。许愿卡子系统 5→4，重复性事项机制 3→2（习惯/ritual）
