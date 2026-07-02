@@ -19,14 +19,13 @@
 | 3 | 所有 project 的 area 引用有效性 | projects/active/*.md + areas/*.md | frontmatter.area 必须存在于 areas/ |
 | 4 | core 项目数 ≤ 3 | projects/active/*.md | 超出告警（strategy project 不计入） |
 | 5 | inbox 积压数量 | tasks/inbox.md | > 20 条提醒清理 |
-| 6 | 滞留任务列表 | tasks/active.md + INDEX.current_week | due_week 过期且未完成的任务（把 ISO 周转日期比较） |
-| 7 | carry ≥ 3 任务列表 | tasks/active.md | 结转过多的任务 |
-| 8 | journal 未配对 [in_progress] | .journal.md | 检查是否有未完成操作 |
-| 9 | area.rituals 与 active 中 ritual 任务一致性 | areas/*.md + tasks/active.md | ritual 是否有遗漏/多余（本周应生成但未生成的） |
-| 10 | strategy project 子 project 引用有效性 | projects/active/*.md | 所有 parent_strategy 指向的 strategy project 存在且 active |
-| 11 | profile.md 结构完整性 | profile.md | 文件存在、frontmatter 合法（type: user_profile）、completeness 值 0~1 |
-| 12 | nudge 冷却段格式合法性 | INDEX.md | 周编号格式正确（YYYY-Www）、无过期冷却（可建议清理） |
-| 13 | project justification 完整性 | projects/active/*.md | 所有 active project 应有 justification 字段
+| 6 | 长期未完成任务列表 | tasks/active.md | created 距今天 > 14 天且 status != "blocked" 的任务 |
+| 7 | journal 未配对 [in_progress] | .journal.md | 检查是否有未完成操作 |
+| 8 | area.rituals 与 active 中 ritual 任务一致性 | areas/*.md + tasks/active.md | ritual 是否有遗漏/多余 |
+| 9 | strategy project 子 project 引用有效性 | projects/active/*.md | 所有 parent_strategy 指向的 strategy project 存在且 active |
+| 10 | profile.md 结构完整性 | profile.md | 文件存在、frontmatter 合法（type: user_profile）、completeness 值 0~1 |
+| 11 | nudge 冷却段格式合法性 | INDEX.md | 周编号格式正确（YYYY-Www）、无过期冷却（可建议清理） |
+| 12 | project justification 完整性 | projects/active/*.md | 所有 active project 应有 justification 字段 |
 
 ---
 
@@ -35,18 +34,18 @@
 ### 步骤 1：读取所有相关文件
 
 按以下顺序读取：
-1. INDEX.md（获取 current_week、active 总数等基准数据）
+1. INDEX.md
 2. tasks/active.md（JSONL 逐行解析）
 3. tasks/inbox.md（计数）
 4. areas/*.md（列出所有 area 名 + rituals 配置）
 5. projects/active/*.md（列出所有 active project 名 + area 引用 + parent_strategy）
 6. .journal.md（检查末尾）
-7. tasks/done-YYYY-MM.md（当月，用于已完成段一致性检查）
+7. tasks/done-YYYY-MM.md（当月）
 8. profile.md（检查存在性和 frontmatter）
 
 ### 步骤 2：逐项检查
 
-按检查清单 #1-#13 逐项执行。每项独立，即使某项检查失败也继续后续检查。
+按检查清单 #1-#12 逐项执行。每项独立，即使某项检查失败也继续后续检查。
 
 ### 步骤 3：汇总输出
 
@@ -57,7 +56,7 @@
 ### 全部通过
 
 ```
-✅ 全面核查通过，13 项检查全部正常。
+✅ 全面核查通过，12 项检查全部正常。
 
 详情：
 - JSONL 合法行数：47 行，无坏行
@@ -65,8 +64,7 @@
 - area 引用全部有效
 - core 项目数：3/3
 - inbox 积压：5 条（正常）
-- 滞留任务：0 条
-- carry ≥3 任务：0 条
+- 长期未完成：2 条
 - journal 无未配对操作
 - ritual 任务一致
 - strategy 子 project 引用有效
@@ -84,22 +82,14 @@
    - t-20260508-003 引用了不存在的 project「已删除项目」
    - 建议：将该任务 projects 改为 [] 后重新指定归属
 
-⚠️ #7 carry ≥3 任务：2 条
-   - t-20260420-001「整理第一章笔记」carry=4
-   - t-20260425-003「写播客大纲」carry=3
-   - 建议：考虑拆小或放弃
+⚠️ #6 长期未完成任务：2 条
+   - t-20260420-001「整理第一章笔记」创建于 2026-04-20（距今 42 天）
+   - t-20260425-003「写播客大纲」创建于 2026-04-25（距今 37 天）
+   - 建议：考虑推进或放弃
 
-其余 11 项检查正常。
+其余 10 项检查正常。
 
 是否需要修复上述问题？（修复会走 journal）
-```
-
-### 发现严重不一致
-
-如果 INDEX 多处漂移（如 area/project 数量对不上、active 总数与 JSONL 行数不符）：
-```
-🔴 INDEX 存在严重漂移（多处不一致），建议全量重建 INDEX。
-是否立即执行 INDEX 全量重建？
 ```
 
 ---
@@ -110,31 +100,21 @@
 2. **不擅自修复**：发现问题只报告 + 给修复建议 + 询问用户
 3. **不主动重建 INDEX**：只有检查发现问题时才询问是否重建
 4. **用户确认后修复走 journal**：如果用户说"修复"，则进入写操作流程，此时走 journal
-5. **ritual_source 不参与孤儿检查**：与完整性扫描规则一致
+5. **ritual_source 不参与孤儿检查**
 
 ---
 
-## 六、与其他工作流的关系
-
-- **周复盘的完整性扫描**是 3 项（task→project 引用、project→area 引用、active 目录 project 但 INDEX 未列入）；前两项对应本清单 #2、#3，第三项为 weekly 特有（详见 workflow-weekly.md）
-- **全面核查**是 13 项完整版，覆盖更广
-- 用户随时可以调用全面核查，不需要等周复盘
-- 如果刚做完周复盘就做全面核查，大概率全部通过（因为 review 已做了 INDEX 重建）
-
----
-
-## 七、对话模板（参考）
+## 六、对话模板（参考）
 
 ### 启动
-> 开始全面核查（13 项检查）...
+> 开始全面核查（12 项检查）...
 
 ### 完成（有问题）
 > 核查完毕，发现 2 处需要注意：
 > 1. 有 1 条任务引用了不存在的 project「已删除项目」
-> 2. 有 1 条任务 carry 已达 4 周，建议拆小或放弃
+> 2. 有 2 条任务创建超过 14 天未推进，建议处理
 >
-> 要我帮你修复吗？修复内容：
-> - 将该任务的 projects 改为 []（等你重新指定归属）
+> 要我帮你修复吗？
 
 ### 完成（无问题）
-> ✅ 全面核查通过，13 项全部正常。数据状态健康。
+> ✅ 全面核查通过，12 项全部正常。数据状态健康。
